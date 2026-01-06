@@ -27,17 +27,20 @@ export function createMainAgent(): Agent {
     onStream: (chunk) => {
       process.stdout.write(convertColor(chunk));
     },
-    onToolCallMsg: (msg) => {
-      for (const tc of msg.toolCalls) {
-        console.log();
-        log('yellow', `🔧 Calling tool: ${tc.name}`);
-        log('dim', `   Arguments: ${JSON.stringify(tc.arguments)}`);
-      }
+    onBeforeToolRun: (name, args) => {
+      // Output calling status without newline, will be updated when complete
+      const argsStr = JSON.stringify(args);
+      const argsPreview = argsStr.length > 60 ? argsStr.substring(0, 60) + '...' : argsStr;
+      process.stdout.write(`\x1b[33m🔧 ${name}\x1b[0m \x1b[2m${argsPreview}\x1b[0m`);
     },
-    onToolResult: (_name, result) => {
-      const preview = result.length > 200 ? result.substring(0, 200) + '...' : result;
-      log('green', `   Result: ${preview.split('\n')[0]}`);
-      console.log();
+    onToolResult: (name, args, result) => {
+      // Clear current line and show completed status
+      const argsStr = JSON.stringify(args);
+      const argsPreview = argsStr.length > 60 ? argsStr.substring(0, 60) + '...' : argsStr;
+      const resultPreview = result.length > 80 ? result.substring(0, 80) + '...' : result;
+      const firstLine = resultPreview.split('\n')[0];
+      process.stdout.write(`\r\x1b[2K\x1b[32m✔ ${name}\x1b[0m \x1b[2m${argsPreview}\x1b[0m\n`);
+      log('dim', `   ${firstLine}`);
     },
   });
 

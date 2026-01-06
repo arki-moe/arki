@@ -242,14 +242,34 @@ describe('Agent', () => {
       });
 
       mockAdapter.setResponses([
-        { message: new ToolCallMsg('', [{ name: 'test_tool', arguments: {} }]), hasToolCalls: true },
+        { message: new ToolCallMsg('', [{ name: 'test_tool', arguments: { input: 'test' } }]), hasToolCalls: true },
         { message: new AIMsg('Done'), hasToolCalls: false },
       ]);
 
       await callbackAgent.run('Test');
 
       expect(onToolResult).toHaveBeenCalledTimes(1);
-      expect(onToolResult).toHaveBeenCalledWith('test_tool', 'Tool executed successfully');
+      expect(onToolResult).toHaveBeenCalledWith('test_tool', { input: 'test' }, 'Tool executed successfully');
+    });
+
+    it('should call onBeforeToolRun callback', async () => {
+      const onBeforeToolRun = vi.fn();
+
+      const callbackAgent = new Agent({
+        adapter: mockAdapter,
+        messages: [new SystemMsg('System')],
+        onBeforeToolRun,
+      });
+
+      mockAdapter.setResponses([
+        { message: new ToolCallMsg('', [{ name: 'test_tool', arguments: { input: 'test' } }]), hasToolCalls: true },
+        { message: new AIMsg('Done'), hasToolCalls: false },
+      ]);
+
+      await callbackAgent.run('Test');
+
+      expect(onBeforeToolRun).toHaveBeenCalledTimes(1);
+      expect(onBeforeToolRun).toHaveBeenCalledWith('test_tool', { input: 'test' });
     });
   });
 

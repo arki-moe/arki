@@ -219,7 +219,8 @@ class Agent {
     messages: Msg[];
     onStream?: (chunk: string) => void;
     onToolCallMsg?: (msg: ToolCallMsg) => void;  // Receive complete tool call message
-    onToolResult?: (name: string, result: string) => void;
+    onBeforeToolRun?: (name: string, args: Record<string, unknown>) => void;  // Called before each tool execution
+    onToolResult?: (name: string, args: Record<string, unknown>, result: string) => void;  // Called after each tool execution
   });
 
   static renderTemplate(template: string, variables: Record<string, string | number | boolean>): string;
@@ -249,11 +250,17 @@ const agent = new Agent({
   messages: [new SystemMsg(systemInstruction)],
   onStream: (chunk) => process.stdout.write(chunk),
   onToolCallMsg: (msg) => {
-    for (const tc of msg.toolCalls) {
-      console.log('Calling tool:', tc.name);
-    }
+    console.log('Received tool calls:', msg.toolCalls.map(tc => tc.name));
   },
-  onToolResult: (name, result) => console.log('Tool result:', result),
+  onBeforeToolRun: (name, args) => {
+    // Show "calling" status (no newline for dynamic update)
+    process.stdout.write(`🔧 ${name} ${JSON.stringify(args)}`);
+  },
+  onToolResult: (name, args, result) => {
+    // Clear line and show completed status
+    process.stdout.write(`\r\x1b[2K✔ ${name} ${JSON.stringify(args)}\n`);
+    console.log('   Result:', result.substring(0, 100));
+  },
 });
 
 // Method 2: Manually create adapter
@@ -270,12 +277,12 @@ const agent = new Agent({
   adapter: openaiAdapter,
   messages: [new SystemMsg(systemInstruction)],
   onStream: (chunk) => process.stdout.write(chunk),
-  onToolCallMsg: (msg) => {
-    for (const tc of msg.toolCalls) {
-      console.log('Calling tool:', tc.name);
-    }
+  onBeforeToolRun: (name, args) => {
+    console.log('Calling tool:', name, args);
   },
-  onToolResult: (name, result) => console.log('Tool result:', result),
+  onToolResult: (name, args, result) => {
+    console.log('Tool result:', name, result.substring(0, 100));
+  },
 });
 
 // Run

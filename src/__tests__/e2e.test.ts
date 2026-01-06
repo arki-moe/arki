@@ -123,7 +123,7 @@ Read files when asked about their contents.`),
             console.log('Tool call:', tc.name, tc.arguments);
           }
         },
-        onToolResult: (name, result) => {
+        onToolResult: (name, _args, result) => {
           console.log('Tool result:', name, result.substring(0, 100));
         },
       });

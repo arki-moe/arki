@@ -24,7 +24,8 @@ export class Agent {
     messages: Msg[];
     onStream?: (chunk: string) => void;
     onToolCallMsg?: (msg: ToolCallMsg) => void;
-    onToolResult?: (name: string, result: string) => void;
+    onBeforeToolRun?: (name: string, args: Record<string, unknown>) => void;
+    onToolResult?: (name: string, args: Record<string, unknown>, result: string) => void;
   };
   private messages: Msg[] = [];
 
@@ -33,7 +34,8 @@ export class Agent {
     messages: Msg[];
     onStream?: (chunk: string) => void;
     onToolCallMsg?: (msg: ToolCallMsg) => void;
-    onToolResult?: (name: string, result: string) => void;
+    onBeforeToolRun?: (name: string, args: Record<string, unknown>) => void;
+    onToolResult?: (name: string, args: Record<string, unknown>, result: string) => void;
   }) {
     this.config = config;
     this.messages = [...config.messages];
@@ -95,6 +97,7 @@ export class Agent {
       this.config.onToolCallMsg?.(toolCallMsg);
 
       for (const tc of toolCalls) {
+        this.config.onBeforeToolRun?.(tc.name, tc.arguments);
 
         debug('Agent', `Executing tool: ${tc.name}`, tc.arguments);
         const tool = TOOLS[tc.name];
@@ -113,7 +116,7 @@ export class Agent {
           result: result.result,
         });
 
-        this.config.onToolResult?.(tc.name, result.result);
+        this.config.onToolResult?.(tc.name, tc.arguments, result.result);
         this.messages.push(result);
       }
     }
