@@ -15,7 +15,7 @@ arki/
 │   │   └── log.ts        # General logging functions
 │   ├── agent/
 │   │   ├── index.ts      # Agent export entry
-│   │   ├── agent.ts      # Agent class implementation
+│   │   ├── Agent.ts      # Agent class implementation
 │   │   ├── Msg.ts        # Message type definitions and constructors
 │   │   └── main/
 │   │       ├── index.ts  # main agent creation logic

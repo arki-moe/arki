@@ -3,7 +3,7 @@ import * as fs from 'fs/promises';
 import * as path from 'path';
 import * as os from 'os';
 import { OpenAIAdapter } from '../adapter/openai.js';
-import { Agent } from '../agent/agent.js';
+import { Agent } from '../agent/Agent.js';
 import { MsgType, SystemMsg, UserMsg } from '../agent/Msg.js';
 import { TOOLS, workingDir, setWorkingDir } from '../global.js';
 

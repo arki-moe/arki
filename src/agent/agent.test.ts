@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
-import { Agent } from './agent.js';
+import { Agent } from './Agent.js';
 import { MsgType, ToolCallMsg, Msg, AIMsg, SystemMsg, ToolResultMsg } from './Msg.js';
 import { Adapter, AdapterResponse } from '../adapter/Adapter.js';
 import { TOOLS } from '../global.js';
