@@ -1,6 +1,6 @@
 {
   "name": "arki",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "AI Agent Programming Assistant",
   "type": "module",
   "main": "dist/index.js",
@@ -17,7 +17,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
-    "test:e2e": "vitest run --testNamePattern='E2E'"
+    "test:e2e": "vitest run --testNamePattern='E2E'",
+    "prepublishOnly": "pnpm build"
   },
   "keywords": [
     "ai",
@@ -30,7 +31,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/your-username/arki.git"
+    "url": "git+https://github.com/arki-moe/arki.git"
   },
   "packageManager": "pnpm@10.15.1",
   "engines": {

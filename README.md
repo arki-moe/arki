@@ -22,7 +22,7 @@ pnpm install -g arki
 ### From source
 
 ```bash
-git clone https://github.com/your-username/arki.git
+git clone https://github.com/arki-moe/arki.git
 cd arki
 pnpm install
 pnpm build
