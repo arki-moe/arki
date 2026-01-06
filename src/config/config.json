@@ -1,0 +1,14 @@
+{
+  "agents": {
+    "main": {
+      "model": "gpt-5.1",
+      "flex": true,
+      "reasoningEffort": "medium"
+    },
+    "coder": {
+      "model": "gpt-5.2",
+      "flex": true,
+      "reasoningEffort": "high"
+    }
+  }
+}
