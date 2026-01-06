@@ -2,9 +2,28 @@
 
 Arki is an AI agent programming tool.
 
+[![npm version](https://img.shields.io/npm/v/arki.svg)](https://www.npmjs.com/package/arki)
+[![npm downloads](https://img.shields.io/npm/dm/arki.svg)](https://www.npmjs.com/package/arki)
+
 ## Installation
 
+### Via npm
+
 ```bash
+npm install -g arki
+```
+
+### Via pnpm
+
+```bash
+pnpm install -g arki
+```
+
+### From source
+
+```bash
+git clone https://github.com/your-username/arki.git
+cd arki
 pnpm install
 pnpm build
 ```

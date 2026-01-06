@@ -1,0 +1,86 @@
+# Source files (not needed in published package)
+src/
+*.ts
+!*.d.ts
+
+# Development files
+tsconfig.json
+tsup.config.ts
+vitest.config.ts
+register-md.mjs
+loader.mjs
+
+# Test files
+**/*.test.ts
+**/__tests__/
+**/__mocks__/
+coverage/
+.vitest/
+
+# Development dependencies and tools
+node_modules/
+.pnpm-store/
+.pnpm-debug.log
+
+# IDE and editor files
+.idea/
+.vscode/
+.cursor/
+*.swp
+*.swo
+*.sublime-project
+*.sublime-workspace
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment files
+.env
+.env.*
+.env.local
+
+# Cache directories
+.cache/
+.parcel-cache/
+.turbo/
+.tsup/
+.tsx/
+.npm/
+
+# Build artifacts (keep dist/ as it's in files)
+*.tsbuildinfo
+
+# Git files
+.git/
+.gitignore
+.gitattributes
+
+# Documentation (keep README.md and LICENSE as they're in files)
+API.md
+PUBLISH_CHECKLIST.md
+
+# Package manager files
+pnpm-lock.yaml
+yarn.lock
+package-lock.json
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.backup
+*.tgz
+
+# Other
+*.pid
+*.seed
+*.pid.lock
+

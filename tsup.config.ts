@@ -1,4 +1,6 @@
 import { defineConfig } from 'tsup';
+import { copyFileSync, mkdirSync } from 'fs';
+import { dirname, join } from 'path';
 
 export default defineConfig({
   entry: ['src/index.ts'],
@@ -24,5 +26,12 @@ export default defineConfig({
       },
     },
   ],
+  onSuccess: async () => {
+    // Copy config.json to dist/config/config.json
+    const configSrc = join(process.cwd(), 'src/config/config.json');
+    const configDest = join(process.cwd(), 'dist/config/config.json');
+    mkdirSync(dirname(configDest), { recursive: true });
+    copyFileSync(configSrc, configDest);
+  },
 });
 
