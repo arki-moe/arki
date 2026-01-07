@@ -42,7 +42,7 @@ arki/
 │   │   ├── write_file/
 │   │   ├── list_directory/
 │   │   ├── run_command/
-│   │   └── get_tool_info/
+│   │   └── read_tool_manual/
 │   └── md.d.ts           # .md file type declaration
 ├── bin/
 │   └── arki.js           # CLI entry script
@@ -417,7 +417,7 @@ my_tool: Brief description of the tool (will be concatenated to system prompt)
 **First line format**: `tool_name: description`
 - Before colon is the tool name
 - After colon is the brief description, parsed as `description` by `Tool.parseManual()`
-- Content below the first line is detailed instructions, parsed as `manual`, can be viewed by Agent via `get_tool_info` tool
+- Content below the first line is detailed instructions, parsed as `manual`, can be viewed by Agent via `read_tool_manual` tool
 
 ### Global State
 
@@ -467,9 +467,9 @@ Tool `name` and `description` are automatically concatenated to the system promp
 - write_file: Write content to a specified file, create the file if it doesn't exist
 - list_directory: List files and subdirectories in a specified directory
 - run_command: Execute shell command in the working directory
-- get_tool_info: View detailed usage instructions for a specified tool
+- read_tool_manual: View detailed usage instructions for a specified tool
 
-If you need to understand the detailed usage of a tool, use the `get_tool_info` tool to view it.
+If you need to understand the detailed usage of a tool, use the `read_tool_manual` tool to view it.
 ```
 
 ### Built-in Tools
@@ -478,7 +478,7 @@ If you need to understand the detailed usage of a tool, use the `get_tool_info` 
 - `write_file` - Write to file
 - `list_directory` - List directory contents
 - `run_command` - Execute shell commands
-- `get_tool_info` - View detailed usage instructions for tools
+- `read_tool_manual` - View detailed usage instructions for tools
 
 ## Development
 

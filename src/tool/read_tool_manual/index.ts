@@ -2,8 +2,8 @@ import { Tool } from '../Tool.js';
 import { TOOLS } from '../../global.js';
 import manualContent from './manual.md';
 
-TOOLS['get_tool_info'] = new Tool({
-  name: 'get_tool_info',
+TOOLS['read_tool_manual'] = new Tool({
+  name: 'read_tool_manual',
   parameters: {
     tool_name: { type: 'string', description: 'Tool name to view' },
   },
@@ -25,3 +25,4 @@ TOOLS['get_tool_info'] = new Tool({
     return `# ${foundTool.name}\n\n${foundTool.description}\n\n${foundTool.manual}`;
   },
 });
+

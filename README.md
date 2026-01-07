@@ -81,40 +81,6 @@ Ways to enable:
 
 Configuration file is located at `~/.config/arki/config.json`:
 
-```json
-{
-  "agents": {
-    "main": {
-      "model": "gpt-5.1",
-      "flex": false,
-      "reasoningEffort": "medium"
-    },
-    "coder": {
-      "model": "gpt-5.2",
-      "flex": false,
-      "reasoningEffort": "high"
-    }
-  }
-}
-```
-
-Each Agent configuration:
-- `model` - Model ID to use
-- `flex` - Use Flex API (low priority, low cost)
-- `reasoningEffort` - Reasoning effort, optional values: `low`, `medium`, `high` (for models that support thinking mode)
-
-Default configuration is automatically copied from the package on first run.
-
-## Built-in Tools
-
-Arki includes the following built-in tools that the AI assistant can automatically call:
-
-- `read_file` - Read file content
-- `write_file` - Write to file
-- `list_directory` - List directory contents
-- `run_command` - Execute shell commands
-- `get_tool_info` - View detailed usage instructions for tools
-
 ## Development
 
 ```bash
