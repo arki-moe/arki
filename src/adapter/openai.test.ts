@@ -78,11 +78,10 @@ describe('OpenAIAdapter', () => {
       expect(result.hasToolCalls).toBe(true);
       expect(result.message.type).toBe(MsgType.ToolCall);
 
-      if (result.message.type === 'tool_call') {
-        expect(result.message.toolCalls.length).toBe(1);
-        expect(result.message.toolCalls[0].name).toBe('read_file');
-        expect(result.message.toolCalls[0].arguments).toEqual({ path: 'test.txt' });
-      }
+      const toolCallMsg = result.message as ToolCallMsg;
+      expect(toolCallMsg.toolCalls.length).toBe(1);
+      expect(toolCallMsg.toolCalls[0].name).toBe('read_file');
+      expect(toolCallMsg.toolCalls[0].arguments).toEqual({ path: 'test.txt' });
       // No text chunks for pure tool calls
       expect(chunks.join('')).toBe('');
     });
@@ -100,9 +99,8 @@ describe('OpenAIAdapter', () => {
       const result = await adapter.chat(messages);
 
       expect(result.hasToolCalls).toBe(true);
-      if (result.message.type === 'tool_call') {
-        expect(result.message.toolCalls.length).toBe(2);
-      }
+      const toolCallMsg = result.message as ToolCallMsg;
+      expect(toolCallMsg.toolCalls.length).toBe(2);
     });
 
     it('should convert messages to OpenAI format', async () => {
@@ -143,7 +141,7 @@ describe('OpenAIAdapter', () => {
         })
       );
 
-      const messages: UserMsg[] = [{ type: 'user', content: 'Hi', timestamp: Date.now() }];
+      const messages: UserMsg[] = [new UserMsg('Hi')];
       const result = await adapter.chat(messages);
 
       expect(result.usage).toEqual({
@@ -177,7 +175,7 @@ describe('OpenAIAdapter', () => {
       ];
       mockChatCreate.mockResolvedValue(createStreamResponse(chunks));
 
-      const messages: UserMsg[] = [{ type: 'user', content: 'Hi', timestamp: Date.now() }];
+      const messages: UserMsg[] = [new UserMsg('Hi')];
       const receivedChunks: string[] = [];
 
       await adapter.chat(messages, (chunk) => {
