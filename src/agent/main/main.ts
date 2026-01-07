@@ -1,5 +1,5 @@
 import { Agent, SystemMsg } from '../index.js';
-import { adapter, TOOLS, workingDir } from '../../global.js';
+import { adapter, workingDir } from '../../global.js';
 import { log, isDebugMode } from '../../log/index.js';
 import { createColorConverter } from './colors.js';
 import { HAS_MANUAL } from '../../tool/Tool.js';
@@ -13,12 +13,8 @@ export function createMainAgent(): Agent {
     throw new Error('Adapter not initialized, please call init() first');
   }
 
-  const toolDescriptions = Object.values(TOOLS).map((t) => `${t.name}: ${t.description}`).join('\n');
-
   const systemInstruction = Agent.renderTemplate(systemPromptTemplate, {
     working_dir: workingDir,
-    current_time: new Date().toLocaleString(),
-    tools: toolDescriptions,
     has_manual: HAS_MANUAL,
   });
 

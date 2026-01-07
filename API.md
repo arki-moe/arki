@@ -494,18 +494,11 @@ if (adapter) {
 
 The global adapter uses settings from the main configuration (`config.agents.main`), including all registered tools. This avoids duplicate adapter instance creation.
 
-Tool `name` and `description` are automatically concatenated to the system prompt. Tools with detailed manual content will have the `📘` symbol prefix:
+Tool definitions are passed to the API directly (name, description, parameters). Tools with detailed manual content will have the `📘` symbol prefix in their description.
 
+The system prompt includes a rule about the `📘` symbol:
 ```
-## Available Tools
-
-- read_file: Read the content of a specified file
-- write_file: Write content to a specified file, create the file if it doesn't exist
-- list_directory: List files and subdirectories in a specified directory
-- run_command: 📘Execute shell command in the working directory
-- read_tool_manual: View detailed usage instructions for a specified tool
-
-If a tool has the 📘 symbol, you MUST call `read_tool_manual` before using it.
+If a tool has the 📘 symbol in its description, you MUST call `read_tool_manual` before using it.
 Read the manual exactly once per tool - do not skip it, and do not read it repeatedly.
 ```
 
