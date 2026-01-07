@@ -1,4 +1,4 @@
-export { Tool } from './Tool.js';
+export { Tool, HAS_MANUAL } from './Tool.js';
 
 import './read_file/index.js';
 import './write_file/index.js';

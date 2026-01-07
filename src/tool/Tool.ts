@@ -2,6 +2,11 @@ import { debug } from '../log/index.js';
 import type { ToolResult } from '../agent/Msg.js';
 
 /**
+ * Symbol indicating tool has detailed manual (needs to call read_tool_manual before use)
+ */
+export const HAS_MANUAL = '📘';
+
+/**
  * Tool class
  */
 export class Tool {
@@ -33,6 +38,7 @@ export class Tool {
    * Parse manual.md content
    * First line format: "tool_name: description", extract description
    * Remaining content is the manual
+   * If manual has content, prepend HAS_MANUAL symbol to description
    */
   static parseManual(content: string): { description: string; manual: string } {
     const lines = content.split('\n');
@@ -45,6 +51,11 @@ export class Tool {
     }
 
     const manual = lines.slice(1).join('\n').trim();
+
+    // If has manual content, prepend symbol to indicate need to read manual
+    if (manual) {
+      description = `${HAS_MANUAL}${description}`;
+    }
 
     return { description, manual };
   }

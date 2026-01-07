@@ -405,9 +405,12 @@ TOOLS['my_tool'] = new Tool({
 ### Tool Class
 
 ```typescript
+// Symbol indicating tool has detailed manual
+const HAS_MANUAL = '📘';
+
 class Tool {
   readonly name: string;
-  readonly description: string;      // Parsed from first line of manual.md
+  readonly description: string;      // Parsed from first line of manual.md (with 📘 prefix if has manual)
   readonly parameters: Record<string, unknown>;
   readonly required: string[];
   readonly manual: string;           // Content of manual.md except first line
@@ -429,18 +432,27 @@ class Tool {
 
 Each tool directory needs a `manual.md` file (automatically inlined at build time):
 
+**Simple tool (no manual content)**:
 ```markdown
-my_tool: Brief description of the tool (will be concatenated to system prompt)
-
-## Parameters
-
-- `param1` (string, required): Parameter 1 description
-- `param2` (number, optional): Parameter 2 description
+read_file: Read the content of a specified file
 ```
+Result: `description = "Read the content of a specified file"`, `manual = ""`
+
+**Complex tool (with manual content)**:
+```markdown
+run_command: Execute shell command in the working directory
+
+## Notes
+
+- Timeout is 30 seconds
+- Returns both stdout and stderr content
+```
+Result: `description = "📘Execute shell command in the working directory"`, `manual = "## Notes\n\n- Timeout is 30 seconds\n- Returns both stdout and stderr content"`
 
 **First line format**: `tool_name: description`
 - Before colon is the tool name
 - After colon is the brief description, parsed as `description` by `Tool.parseManual()`
+- If there is content below the first line, `📘` symbol is prepended to description, indicating the tool has detailed manual
 - Content below the first line is detailed instructions, parsed as `manual`, can be viewed by Agent via `read_tool_manual` tool
 
 ### Global State
@@ -482,7 +494,7 @@ if (adapter) {
 
 The global adapter uses settings from the main configuration (`config.agents.main`), including all registered tools. This avoids duplicate adapter instance creation.
 
-Tool `name` and `description` are automatically concatenated to the system prompt in the following format:
+Tool `name` and `description` are automatically concatenated to the system prompt. Tools with detailed manual content will have the `📘` symbol prefix:
 
 ```
 ## Available Tools
@@ -490,10 +502,11 @@ Tool `name` and `description` are automatically concatenated to the system promp
 - read_file: Read the content of a specified file
 - write_file: Write content to a specified file, create the file if it doesn't exist
 - list_directory: List files and subdirectories in a specified directory
-- run_command: Execute shell command in the working directory
+- run_command: 📘Execute shell command in the working directory
 - read_tool_manual: View detailed usage instructions for a specified tool
 
-If you need to understand the detailed usage of a tool, use the `read_tool_manual` tool to view it.
+If a tool has the 📘 symbol, you MUST call `read_tool_manual` before using it.
+Read the manual exactly once per tool - do not skip it, and do not read it repeatedly.
 ```
 
 ### Built-in Tools
