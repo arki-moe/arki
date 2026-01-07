@@ -43,6 +43,7 @@ arki [options]
 Options:
   -p <path>      Specify working directory
   --debug, -d    Enable debug mode, show detailed logs
+  --reset        Reset configuration to factory defaults
   --help, -h     Show help information
 ```
 
@@ -80,6 +81,14 @@ Ways to enable:
 ## Configuration File
 
 Configuration file is located at `~/.config/arki/config.json`:
+
+### Reset to Factory Defaults
+
+```bash
+arki --reset
+```
+
+This will delete the current configuration file. The default configuration will be used on next startup.
 
 ## Development
 
