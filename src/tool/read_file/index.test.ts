@@ -3,7 +3,6 @@ import * as fs from 'fs/promises';
 import * as path from 'path';
 import * as os from 'os';
 import { TOOLS, workingDir, setWorkingDir } from '../../global.js';
-import { ToolResultMsg } from '../../agent/Msg.js';
 
 import './index.js';
 
@@ -116,11 +115,8 @@ describe('ReadFileTool', () => {
 
       const result = await tool().run({ path: 'test.txt' });
 
-      expect(result).toBeInstanceOf(ToolResultMsg);
-      expect(result.type).toBe('tool_result');
       expect(result.toolName).toBe('read_file');
       expect(result.result).toBe('Test content');
-      expect(result.timestamp).toBeTypeOf('number');
     });
 
     it('should handle error result', async () => {

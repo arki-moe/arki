@@ -3,7 +3,6 @@ import * as fs from 'fs/promises';
 import * as path from 'path';
 import * as os from 'os';
 import { TOOLS, workingDir, setWorkingDir } from '../../global.js';
-import { ToolResultMsg } from '../../agent/Msg.js';
 
 import './index.js';
 
@@ -110,7 +109,6 @@ describe('RunCommandTool', () => {
     it('should wrap result with toolName', async () => {
       const result = await tool().run({ command: 'echo "test"' });
 
-      expect(result).toBeInstanceOf(ToolResultMsg);
       expect(result.toolName).toBe('run_command');
       expect(result.result.trim()).toBe('test');
     });

@@ -1,5 +1,5 @@
 import { debug } from '../log/index.js';
-import { ToolResultMsg } from '../agent/Msg.js';
+import type { ToolResult } from '../agent/Msg.js';
 
 /**
  * Tool class
@@ -52,7 +52,7 @@ export class Tool {
   /**
    * Execute tool (with error handling and logging)
    */
-  async run(args: Record<string, unknown>): Promise<ToolResultMsg> {
+  async run(args: Record<string, unknown>): Promise<ToolResult> {
     debug('Tool', `Starting tool execution: ${this.name}`, args);
     const startTime = Date.now();
 
@@ -62,16 +62,16 @@ export class Tool {
 
       if (typeof result === 'string') {
         debug('Tool', `Tool execution successful: ${this.name} (elapsed: ${elapsed}ms, result length: ${result.length})`);
-        return new ToolResultMsg(this.name, result);
+        return { toolName: this.name, result };
       }
 
       debug('Tool', `Tool execution completed: ${this.name} (elapsed: ${elapsed}ms, isError: ${result.isError || false})`);
-      return new ToolResultMsg(this.name, result.content, result.isError);
+      return { toolName: this.name, result: result.content, isError: result.isError };
     } catch (error) {
       const elapsed = Date.now() - startTime;
       const errorMsg = error instanceof Error ? error.message : String(error);
       debug('Tool', `Tool execution failed: ${this.name} (elapsed: ${elapsed}ms)`, errorMsg);
-      return new ToolResultMsg(this.name, `Error: ${errorMsg}`, true);
+      return { toolName: this.name, result: `Error: ${errorMsg}`, isError: true };
     }
   }
 }

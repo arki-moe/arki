@@ -3,7 +3,6 @@ import * as fs from 'fs/promises';
 import * as path from 'path';
 import * as os from 'os';
 import { TOOLS, workingDir, setWorkingDir } from '../../global.js';
-import { ToolResultMsg } from '../../agent/Msg.js';
 
 import './index.js';
 
@@ -149,7 +148,6 @@ describe('WriteFileTool', () => {
         { path: 'test.txt', content: 'Test content' }
       );
 
-      expect(result).toBeInstanceOf(ToolResultMsg);
       expect(result.toolName).toBe('write_file');
       expect(result.result).toBe('File written successfully: test.txt');
     });

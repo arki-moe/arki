@@ -1,6 +1,6 @@
 import OpenAI from 'openai';
 import { Adapter, AdapterResponse, TEMPERATURE, MAX_COMPLETION_TOKENS } from './Adapter.js';
-import { Msg, MsgType, ToolCallMsg, AIMsg, ToolResultMsg } from '../agent/Msg.js';
+import { Msg, MsgType, ToolCallMsg, ToolCall, AIMsg, ToolResultMsg } from '../agent/Msg.js';
 import { debug } from '../log/index.js';
 
 export class OpenAIAdapter extends Adapter {
@@ -43,11 +43,14 @@ export class OpenAIAdapter extends Adapter {
         });
       } else if (msg.type === MsgType.ToolResult) {
         const toolResultMsg = msg as ToolResultMsg;
-        result.push({
-          role: 'tool',
-          tool_call_id: pendingIds.shift() || `call_${msg.timestamp}`,
-          content: toolResultMsg.isError ? `Error: ${toolResultMsg.result}` : toolResultMsg.result,
-        });
+        // OpenAI requires each tool result as a separate message
+        for (const tr of toolResultMsg.toolResults) {
+          result.push({
+            role: 'tool',
+            tool_call_id: pendingIds.shift() || `call_${msg.timestamp}`,
+            content: tr.isError ? `Error: ${tr.result}` : tr.result,
+          });
+        }
       }
     }
     return result;
@@ -121,7 +124,7 @@ export class OpenAIAdapter extends Adapter {
     };
 
     if (toolCalls.size > 0) {
-      const calls: ToolCallMsg['toolCalls'] = [...toolCalls.values()].map((tc) => ({
+      const calls: ToolCall[] = [...toolCalls.values()].map((tc) => ({
         name: tc.name,
         arguments: JSON.parse(tc.args || '{}'),
       }));

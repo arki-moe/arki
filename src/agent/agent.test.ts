@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { Agent } from './Agent.js';
-import { MsgType, ToolCallMsg, Msg, AIMsg, SystemMsg, ToolResultMsg } from './Msg.js';
+import { MsgType, ToolCallMsg, ToolCall, Msg, AIMsg, SystemMsg, ToolResultMsg } from './Msg.js';
 import { Adapter, AdapterResponse } from '../adapter/Adapter.js';
 import { TOOLS } from '../global.js';
 import { Tool } from '../tool/Tool.js';
@@ -52,7 +52,7 @@ describe('Agent', () => {
       parameters: { input: { type: 'string' } },
       required: ['input'],
       manual: 'Test manual',
-      run: vi.fn().mockResolvedValue(new ToolResultMsg('test_tool', 'Tool executed successfully')),
+      run: vi.fn().mockResolvedValue({ toolName: 'test_tool', result: 'Tool executed successfully' }),
     } as unknown as Tool;
 
     TOOLS['test_tool'] = mockTool;
@@ -117,7 +117,7 @@ describe('Agent', () => {
     });
 
     it('should handle single tool call', async () => {
-      const toolCall: ToolCallMsg['toolCalls'][number] = { name: 'test_tool', arguments: { input: 'test input' } };
+      const toolCall: ToolCall = { name: 'test_tool', arguments: { input: 'test input' } };
 
       mockAdapter.setResponses([
         {
@@ -142,15 +142,15 @@ describe('Agent', () => {
     });
 
     it('should handle multiple tool calls in one response', async () => {
-      const toolCalls: ToolCallMsg['toolCalls'] = [
+      const toolCalls: ToolCall[] = [
         { name: 'test_tool', arguments: { input: 'first' } },
         { name: 'test_tool', arguments: { input: 'second' } },
       ];
 
       const runMock = vi
         .fn()
-        .mockResolvedValueOnce(new ToolResultMsg('test_tool', 'Result 1'))
-        .mockResolvedValueOnce(new ToolResultMsg('test_tool', 'Result 2'));
+        .mockResolvedValueOnce({ toolName: 'test_tool', result: 'Result 1' })
+        .mockResolvedValueOnce({ toolName: 'test_tool', result: 'Result 2' });
 
       mockTool.run = runMock;
 

@@ -111,34 +111,58 @@ class AIMsg extends Msg {
   constructor(content: string);
 }
 
-class ToolCallMsg extends Msg {
-  readonly type = MsgType.ToolCall;
-  readonly toolCalls: Array<{
-    name: string;
-    arguments: Record<string, unknown>;
-  }>;
-  constructor(content: string, toolCalls: Array<{ name: string; arguments: Record<string, unknown> }>);
+// Single tool call
+interface ToolCall {
+  name: string;
+  arguments: Record<string, unknown>;
 }
 
+class ToolCallMsg extends Msg {
+  readonly type = MsgType.ToolCall;
+  readonly toolCalls: ToolCall[];
+  constructor(content: string, toolCalls: ToolCall[]);
+}
+
+// Single tool result (returned by Tool.run())
+interface ToolResult {
+  toolName: string;
+  result: string;
+  isError?: boolean;
+}
+
+// Tool result message (contains multiple results for multi-platform compatibility)
 class ToolResultMsg extends Msg {
   readonly type = MsgType.ToolResult;
-  readonly toolName: string;
-  readonly result: string;
-  readonly isError?: boolean;
-  constructor(toolName: string, result: string, isError?: boolean);
+  readonly toolResults: ToolResult[];
+  constructor(toolResults: ToolResult[]);
+
+  // Helper: create from single result
+  static single(toolName: string, result: string, isError?: boolean): ToolResultMsg;
 }
 ```
 
 Create messages using constructors:
 
 ```typescript
-import { SystemMsg, UserMsg, AIMsg, ToolCallMsg, ToolResultMsg } from 'arki';
+import { SystemMsg, UserMsg, AIMsg, ToolCallMsg, ToolCall, ToolResultMsg, ToolResult } from 'arki';
 
 const system = new SystemMsg('You are an assistant');
 const user = new UserMsg('Hello');
 const ai = new AIMsg('Hello! How can I help you?');
-const toolCall = new ToolCallMsg('', [{ name: 'read_file', arguments: { path: 'test.txt' } }]);
-const toolResult = new ToolResultMsg('read_file', 'File content');
+
+// Tool call message
+const calls: ToolCall[] = [{ name: 'read_file', arguments: { path: 'test.txt' } }];
+const toolCall = new ToolCallMsg('', calls);
+
+// Single tool result (convenience method)
+const toolResult = ToolResultMsg.single('read_file', 'File content');
+
+// Multiple tool results (for batch tool calls)
+const results: ToolResult[] = [
+  { toolName: 'read_file', result: 'File 1 content' },
+  { toolName: 'read_file', result: 'File 2 content' },
+];
+const toolResults = new ToolResultMsg(results);
 ```
 
 ### Adapter Types
@@ -397,7 +421,7 @@ class Tool {
   });
 
   static parseManual(content: string): { description: string; manual: string };
-  async run(args: Record<string, unknown>): Promise<ToolResultMsg>;  // Directly returns ToolResultMsg
+  async run(args: Record<string, unknown>): Promise<ToolResult>;  // Returns single ToolResult
 }
 ```
 

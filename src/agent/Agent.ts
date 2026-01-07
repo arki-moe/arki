@@ -1,4 +1,4 @@
-import { Msg, MsgType, ToolCallMsg, UserMsg, ToolResultMsg } from './Msg.js';
+import { Msg, MsgType, ToolCallMsg, UserMsg, ToolResultMsg, ToolResult } from './Msg.js';
 import { Adapter } from '../adapter/Adapter.js';
 import { TOOLS } from '../global.js';
 import { debug } from '../log/index.js';
@@ -96,14 +96,16 @@ export class Agent {
 
       this.config.onToolCallMsg?.(toolCallMsg);
 
+      const toolResults: ToolResult[] = [];
+
       for (const tc of toolCalls) {
         this.config.onBeforeToolRun?.(tc.name, tc.arguments);
 
         debug('Agent', `Executing tool: ${tc.name}`, tc.arguments);
         const tool = TOOLS[tc.name];
-        const result: ToolResultMsg = tool
+        const result: ToolResult = tool
           ? await tool.run(tc.arguments)
-          : new ToolResultMsg(tc.name, `Unknown tool: ${tc.name}`, true);
+          : { toolName: tc.name, result: `Unknown tool: ${tc.name}`, isError: true };
 
         debug('Agent', `Tool execution completed: ${tc.name}`, {
           isError: result.isError,
@@ -117,8 +119,10 @@ export class Agent {
         });
 
         this.config.onToolResult?.(tc.name, tc.arguments, result.result);
-        this.messages.push(result);
+        toolResults.push(result);
       }
+
+      this.messages.push(new ToolResultMsg(toolResults));
     }
   }
 

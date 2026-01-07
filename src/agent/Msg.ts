@@ -57,35 +57,50 @@ export class AIMsg extends Msg {
 }
 
 /**
+ * Single tool call
+ */
+export interface ToolCall {
+  name: string;
+  arguments: Record<string, unknown>;
+}
+
+/**
  * Tool call message constructor
  */
 export class ToolCallMsg extends Msg {
   readonly type = MsgType.ToolCall;
-  readonly toolCalls: Array<{
-    name: string;
-    arguments: Record<string, unknown>;
-  }>;
+  readonly toolCalls: ToolCall[];
 
-  constructor(content: string, toolCalls: Array<{ name: string; arguments: Record<string, unknown> }>) {
+  constructor(content: string, toolCalls: ToolCall[]) {
     super(content);
     this.toolCalls = toolCalls;
   }
 }
 
 /**
- * Tool result message constructor
+ * Single tool result
+ */
+export interface ToolResult {
+  toolName: string;
+  result: string;
+  isError?: boolean;
+}
+
+/**
+ * Tool result message constructor (contains multiple results)
  */
 export class ToolResultMsg extends Msg {
   readonly type = MsgType.ToolResult;
-  readonly toolName: string;
-  readonly result: string;
-  readonly isError?: boolean;
+  readonly toolResults: ToolResult[];
 
-  constructor(toolName: string, result: string, isError?: boolean) {
+  constructor(toolResults: ToolResult[]) {
     super('');
-    this.toolName = toolName;
-    this.result = result;
-    this.isError = isError;
+    this.toolResults = toolResults;
+  }
+
+  /** Helper: create from single result */
+  static single(toolName: string, result: string, isError?: boolean): ToolResultMsg {
+    return new ToolResultMsg([{ toolName, result, isError }]);
   }
 }
 

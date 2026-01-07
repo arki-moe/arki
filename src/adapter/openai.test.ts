@@ -113,7 +113,7 @@ describe('OpenAIAdapter', () => {
         new UserMsg('User message'),
         new AIMsg('AI response'),
         new ToolCallMsg('', [{ name: 'read_file', arguments: { path: 'test.txt' } }]),
-        new ToolResultMsg('read_file', 'File contents'),
+        ToolResultMsg.single('read_file', 'File contents'),
       ];
 
       await adapter.chat(messages);
