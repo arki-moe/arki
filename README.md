@@ -1,3 +1,5 @@
+> **⚠️ Warning: This project is under active development. Please do not use it in production environments.**
+
 # Arki - AI Agent Programming Assistant
 
 Arki is an AI agent programming tool.
