@@ -1,8 +1,9 @@
 /**
  * Debug logging module
+ * All debug output is single-line for log-friendly format
  */
 
-import { colors } from './index.js';
+import { log } from './log.js';
 
 /** Debug mode flag */
 let _debugMode = false;
@@ -18,29 +19,25 @@ export function setDebugMode(enabled: boolean): void {
 }
 
 /**
- * Debug log function
+ * Format data to single-line string (max 100 chars)
+ */
+function formatData(data: unknown, maxLen = 100): string {
+  if (data === undefined) return '';
+  const str = typeof data === 'string' ? data : JSON.stringify(data);
+  const singleLine = str.replace(/\s+/g, ' ').trim();
+  return singleLine.length > maxLen ? singleLine.slice(0, maxLen) + '...' : singleLine;
+}
+
+/**
+ * Debug log function - single line output with timestamp
  * @param category Log category (e.g., 'API', 'Agent', 'Tool')
  * @param message Log message
- * @param data Optional additional data
+ * @param data Optional additional data (will be formatted to single line)
  */
 export function debug(category: string, message: string, data?: unknown): void {
   if (!_debugMode) return;
 
-  const timestamp = new Date().toISOString().slice(11, 23);
-  const prefix = `${colors.gray}[${timestamp}]${colors.reset} ${colors.magenta}[DEBUG:${category}]${colors.reset}`;
-
-  console.log(`${prefix} ${colors.cyan}${message}${colors.reset}`);
-
-  if (data !== undefined) {
-    const dataStr = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
-    const lines = dataStr.split('\n');
-    const maxLines = 20;
-    const truncated = lines.length > maxLines;
-    const displayLines = truncated ? lines.slice(-maxLines) : lines;
-    if (truncated) {
-      console.log(colors.dim + `    ... (${lines.length - maxLines} earlier lines)` + colors.reset);
-    }
-    console.log(colors.dim + displayLines.map((l) => `    ${l}`).join('\n') + colors.reset);
-  }
+  const dataStr = data !== undefined ? ` <dim>${formatData(data)}</dim>` : '';
+  log(`<magenta>[${category}]</magenta> <cyan>${message}</cyan>${dataStr}`);
 }
 

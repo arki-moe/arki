@@ -6,7 +6,7 @@ import * as path from 'path';
 import * as os from 'os';
 import { init, config, TOOLS, workingDir } from './global.js';
 import './tool/index.js';
-import { setDebugMode, isDebugMode, debug, log, colors } from './log/index.js';
+import { setDebugMode, isDebugMode, debug, log, convertColorTags } from './log/index.js';
 import { MODELS } from './model/index.js';
 import { createMainAgent } from './agent/Arki/index.js';
 import packageJson from '../package.json' with { type: 'json' };
@@ -71,15 +71,15 @@ async function main() {
   const model = MODELS[mainAgentConfig.model];
 
   console.log();
-  log('cyan', `Arki AI Agent v${packageJson.version}`);
+  log(`<cyan>Arki AI Agent v${packageJson.version}</cyan>`);
   console.log();
-  log('dim', `Model: ${mainAgentConfig.model}${model ? ` (${model.name})` : ''}`);
-  log('dim', `Working directory: ${workingDir}`);
+  log(`<dim>Model: ${mainAgentConfig.model}${model ? ` (${model.name})` : ''}</dim>`);
+  log(`<dim>Working directory: ${workingDir}</dim>`);
   if (isDebugMode()) {
-    log('yellow', `🐛 Debug mode enabled`);
+    log(`<yellow>Debug mode enabled</yellow>`);
   }
   console.log();
-  log('dim', `Loaded ${Object.keys(TOOLS).length} tools`);
+  log(`<dim>Loaded ${Object.keys(TOOLS).length} tools</dim>`);
   if (isDebugMode()) {
     debug('Init', 'Loaded tools', Object.keys(TOOLS));
     debug('Init', 'Agent config', mainAgentConfig);
@@ -93,23 +93,24 @@ async function main() {
     output: process.stdout,
   });
 
-  log('blue', 'Enter your question and press Enter to send. Type /exit or /quit to exit.');
-  log('blue', 'Type /clear to clear conversation history.');
+  log(`<blue>Enter your question and press Enter to send. Type /exit or /quit to exit.</blue>`);
+  log(`<blue>Type /clear to clear conversation history.</blue>`);
   console.log();
 
+  const promptStr = convertColorTags('<green>> </green>');
   const prompt = () => {
-    rl.question(`${colors.green}> ${colors.reset}`, async (input) => {
+    rl.question(promptStr, async (input) => {
       const trimmed = input.trim();
 
       if (trimmed === '/exit' || trimmed === '/quit') {
-        log('cyan', 'Goodbye!');
+        log(`<cyan>Goodbye!</cyan>`);
         rl.close();
         process.exit(0);
       }
 
       if (trimmed === '/clear') {
         agent.reset();
-        log('yellow', 'Conversation history cleared');
+        log(`<yellow>Conversation history cleared</yellow>`);
         console.log();
         prompt();
         return;
@@ -117,11 +118,11 @@ async function main() {
 
       if (trimmed === '/help') {
         console.log();
-        log('cyan', 'Available commands:');
-        log('dim', '  /exit, /quit  - Exit program');
-        log('dim', '  /clear        - Clear conversation history');
-        log('dim', '  /debug        - Toggle debug mode');
-        log('dim', '  /help         - Show help');
+        log(`<cyan>Available commands:</cyan>`);
+        log(`<dim>  /exit, /quit  - Exit program</dim>`);
+        log(`<dim>  /clear        - Clear conversation history</dim>`);
+        log(`<dim>  /debug        - Toggle debug mode</dim>`);
+        log(`<dim>  /help         - Show help</dim>`);
         console.log();
         prompt();
         return;
@@ -129,7 +130,7 @@ async function main() {
 
       if (trimmed === '/debug') {
         setDebugMode(!isDebugMode());
-        log('yellow', `Debug mode ${isDebugMode() ? 'enabled 🐛' : 'disabled'}`);
+        log(`<yellow>Debug mode ${isDebugMode() ? 'enabled' : 'disabled'}</yellow>`);
         console.log();
         prompt();
         return;
@@ -148,15 +149,12 @@ async function main() {
 
         if (result.usage) {
           const contextLimit = model?.capabilities.contextWindow || 'N/A';
-          log(
-            'dim',
-            `[Tokens: ${result.usage.totalTokens} (prompt: ${result.usage.promptTokens}, cached: ${result.usage.cachedTokens || 0}, limit: ${contextLimit})]`
-          );
+          log(`<dim>[Tokens: ${result.usage.totalTokens} (prompt: ${result.usage.promptTokens}, cached: ${result.usage.cachedTokens || 0}, limit: ${contextLimit})]</dim>`);
         }
 
         console.log();
       } catch (error) {
-        log('red', `Error: ${error instanceof Error ? error.message : String(error)}`);
+        log(`<red>Error: ${error instanceof Error ? error.message : String(error)}</red>`);
         console.log();
       }
 

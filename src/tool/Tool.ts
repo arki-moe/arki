@@ -64,24 +64,17 @@ export class Tool {
    * Execute tool (with error handling and logging)
    */
   async run(args: Record<string, unknown>): Promise<ToolResult> {
-    debug('Tool', `Starting tool execution: ${this.name}`, args);
-    const startTime = Date.now();
-
     try {
       const result = await this._execute(args);
-      const elapsed = Date.now() - startTime;
 
       if (typeof result === 'string') {
-        debug('Tool', `Tool execution successful: ${this.name} (elapsed: ${elapsed}ms, result length: ${result.length})`);
         return { toolName: this.name, result };
       }
 
-      debug('Tool', `Tool execution completed: ${this.name} (elapsed: ${elapsed}ms, isError: ${result.isError || false})`);
       return { toolName: this.name, result: result.content, isError: result.isError };
     } catch (error) {
-      const elapsed = Date.now() - startTime;
       const errorMsg = error instanceof Error ? error.message : String(error);
-      debug('Tool', `Tool execution failed: ${this.name} (elapsed: ${elapsed}ms)`, errorMsg);
+      debug('Tool', `${this.name} error`, errorMsg);
       return { toolName: this.name, result: `Error: ${errorMsg}`, isError: true };
     }
   }

@@ -101,16 +101,10 @@ export class Agent {
       for (const tc of toolCalls) {
         this.config.onBeforeToolRun?.(tc.name, tc.arguments);
 
-        debug('Agent', `Executing tool: ${tc.name}`, tc.arguments);
         const tool = TOOLS[tc.name];
         const result: ToolResult = tool
           ? await tool.run(tc.arguments)
           : { toolName: tc.name, result: `Unknown tool: ${tc.name}`, isError: true };
-
-        debug('Agent', `Tool execution completed: ${tc.name}`, {
-          isError: result.isError,
-          contentLength: result.result.length,
-        });
 
         toolCallHistory.push({
           name: tc.name,

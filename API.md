@@ -10,9 +10,9 @@ arki/
 │   ├── index.ts          # CLI entry + library exports
 │   ├── global.ts         # Global variables and initialization (includes global adapter and TOOLS)
 │   ├── log/
-│   │   ├── index.ts      # Color definitions and export entry
+│   │   ├── index.ts      # Color definitions, XML tag conversion, and export entry
 │   │   ├── debug.ts      # Debug mode and logging
-│   │   └── log.ts        # General logging functions
+│   │   └── log.ts        # General logging functions (supports XML color tags)
 │   ├── agent/
 │   │   ├── index.ts      # Agent export entry
 │   │   ├── Agent.ts      # Agent class implementation
@@ -20,7 +20,6 @@ arki/
 │   │   └── Arki/
 │   │       ├── index.ts  # Arki agent creation logic
 │   │       ├── Arki.ts   # createMainAgent implementation
-│   │       ├── colors.ts # Streaming color tag conversion
 │   │       └── system.md # Arki agent system prompt
 │   ├── adapter/
 │   │   ├── Adapter.ts    # LLM adapter base class
@@ -277,13 +276,10 @@ const agent = new Agent({
     console.log('Received tool calls:', msg.toolCalls.map(tc => tc.name));
   },
   onBeforeToolRun: (name, args) => {
-    // Show "calling" status (no newline for dynamic update)
-    process.stdout.write(`🔧 ${name} ${JSON.stringify(args)}`);
+    log(`<yellow>[TOOL]</yellow> ${name} <dim>${JSON.stringify(args)}</dim>`);
   },
   onToolResult: (name, args, result) => {
-    // Clear line and show completed status
-    process.stdout.write(`\r\x1b[2K✔ ${name} ${JSON.stringify(args)}\n`);
-    console.log('   Result:', result.substring(0, 100));
+    log(`<green>[DONE]</green> ${name} <dim>${result.substring(0, 80)}</dim>`);
   },
 });
 

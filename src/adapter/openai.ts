@@ -75,7 +75,6 @@ export class OpenAIAdapter extends Adapter {
     debug('API', `Requesting OpenAI (model: ${this.model}, messages: ${messages.length})`);
 
     const openaiMessages = this.toOpenAIMessages(messages);
-    debug('API', 'Sent prompt:', openaiMessages);
 
     const startTime = Date.now();
     const requestParams: OpenAI.Chat.Completions.ChatCompletionCreateParamsStreaming & {

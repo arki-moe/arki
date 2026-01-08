@@ -1,9 +1,11 @@
 import { Agent, SystemMsg } from '../index.js';
 import { adapter, workingDir } from '../../global.js';
-import { log, isDebugMode } from '../../log/index.js';
-import { createColorConverter } from './colors.js';
+import { log, createColorConverter } from '../../log/index.js';
 import { HAS_MANUAL } from '../../tool/Tool.js';
 import systemPromptTemplate from './system.md';
+
+/** Track tool start times for elapsed calculation */
+const toolStartTimes = new Map<string, number>();
 
 /**
  * Create main agent
@@ -26,29 +28,19 @@ export function createMainAgent(): Agent {
       process.stdout.write(convertColor(chunk));
     },
     onBeforeToolRun: (name, args) => {
+      toolStartTimes.set(name, Date.now());
       const argsStr = JSON.stringify(args);
       const argsPreview = argsStr.length > 60 ? argsStr.substring(0, 60) + '...' : argsStr;
-      if (isDebugMode()) {
-        // Debug mode: newline to avoid interference with debug logs
-        console.log(`\x1b[33m🔧 ${name}\x1b[0m \x1b[2m${argsPreview}\x1b[0m`);
-      } else {
-        // Normal mode: no newline, will be overwritten when complete
-        process.stdout.write(`\x1b[33m🔧 ${name}\x1b[0m \x1b[2m${argsPreview}\x1b[0m`);
-      }
+      log(`<yellow>[TOOL]</yellow> ${name} <dim>${argsPreview}</dim>`);
     },
     onToolResult: (name, args, result) => {
-      const argsStr = JSON.stringify(args);
-      const argsPreview = argsStr.length > 60 ? argsStr.substring(0, 60) + '...' : argsStr;
+      const startTime = toolStartTimes.get(name) || Date.now();
+      const elapsed = Date.now() - startTime;
+      toolStartTimes.delete(name);
+
       const resultPreview = result.length > 80 ? result.substring(0, 80) + '...' : result;
       const firstLine = resultPreview.split('\n')[0];
-      if (isDebugMode()) {
-        // Debug mode: just print completion status
-        console.log(`\x1b[32m✔ ${name}\x1b[0m \x1b[2m${argsPreview}\x1b[0m`);
-      } else {
-        // Normal mode: clear line and overwrite
-        process.stdout.write(`\r\x1b[2K\x1b[32m✔ ${name}\x1b[0m \x1b[2m${argsPreview}\x1b[0m\n`);
-      }
-      log('dim', `   ${firstLine}`);
+      log(`<green>[DONE]</green> ${name} <dim>(${elapsed}ms) ${firstLine}</dim>`);
     },
   });
 

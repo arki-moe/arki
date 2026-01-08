@@ -1,43 +1,53 @@
 /**
  * General logging module
+ * All log output is single-line with timestamp prefix
+ * Supports XML-style color tags: <red>text</red>, <bold>text</bold>, etc.
  */
 
-import { colors, type ColorName } from './index.js';
+import { colors, convertColorTags } from './index.js';
 
 /**
- * Colored log output
- * @param color Color name
- * @param args Content to output
+ * Get current timestamp string (HH:MM:SS.mmm)
  */
-export function log(color: ColorName, ...args: unknown[]): void {
-  console.log(colors[color], ...args, colors.reset);
+function getTimestamp(): string {
+  return new Date().toISOString().slice(11, 23);
+}
+
+/**
+ * Log output with timestamp and XML color tag support
+ * @param message Message string with optional XML color tags
+ * @example log('<yellow>[TOOL]</yellow> read_file <dim>{"path":"test.txt"}</dim>')
+ */
+export function log(message: string): void {
+  const ts = `<gray>[${getTimestamp()}]</gray>`;
+  console.log(convertColorTags(`${ts} ${message}`));
 }
 
 /**
  * Info log
  */
 export function info(message: string): void {
-  console.log(`${colors.blue}ℹ${colors.reset} ${message}`);
+  log(`<blue>[INFO]</blue> ${message}`);
 }
 
 /**
  * Success log
  */
 export function success(message: string): void {
-  console.log(`${colors.green}✔${colors.reset} ${message}`);
+  log(`<green>[OK]</green> ${message}`);
 }
 
 /**
  * Warning log
  */
 export function warn(message: string): void {
-  console.log(`${colors.yellow}⚠${colors.reset} ${message}`);
+  log(`<yellow>[WARN]</yellow> ${message}`);
 }
 
 /**
  * Error log
  */
 export function error(message: string): void {
-  console.log(`${colors.red}✖${colors.reset} ${message}`);
+  log(`<red>[ERROR]</red> ${message}`);
 }
 
