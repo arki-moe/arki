@@ -275,11 +275,11 @@ const agent = new Agent({
   onToolCallMsg: (msg) => {
     console.log('Received tool calls:', msg.toolCalls.map(tc => tc.name));
   },
-  onBeforeToolRun: (name, args) => {
-    log(`<yellow>[TOOL]</yellow> ${name} <dim>${JSON.stringify(args)}</dim>`);
+  onBeforeToolRun: (name) => {
+    // Record start time for elapsed calculation
   },
   onToolResult: (name, args, result) => {
-    log(`<green>[DONE]</green> ${name} <dim>${result.substring(0, 80)}</dim>`);
+    log(`<green>[TOOL]</green> ${name} <dim>${JSON.stringify(args)}</dim>`);
   },
 });
 

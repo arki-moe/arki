@@ -1,6 +1,6 @@
 import { Agent, SystemMsg } from '../index.js';
 import { adapter, workingDir } from '../../global.js';
-import { log, createColorConverter } from '../../log/index.js';
+import { log, isDebugMode, createColorConverter } from '../../log/index.js';
 import { HAS_MANUAL } from '../../tool/Tool.js';
 import systemPromptTemplate from './system.md';
 
@@ -27,20 +27,33 @@ export function createMainAgent(): Agent {
     onStream: (chunk) => {
       process.stdout.write(convertColor(chunk));
     },
-    onBeforeToolRun: (name, args) => {
+    onBeforeToolRun: (name) => {
       toolStartTimes.set(name, Date.now());
-      const argsStr = JSON.stringify(args);
-      const argsPreview = argsStr.length > 60 ? argsStr.substring(0, 60) + '...' : argsStr;
-      log(`<yellow>[TOOL]</yellow> ${name} <dim>${argsPreview}</dim>`);
     },
     onToolResult: (name, args, result) => {
       const startTime = toolStartTimes.get(name) || Date.now();
       const elapsed = Date.now() - startTime;
       toolStartTimes.delete(name);
 
-      const resultPreview = result.length > 80 ? result.substring(0, 80) + '...' : result;
-      const firstLine = resultPreview.split('\n')[0];
-      log(`<green>[DONE]</green> ${name} <dim>(${elapsed}ms) ${firstLine}</dim>`);
+      const argsStr = JSON.stringify(args);
+      const argsPreview = argsStr.length > 60 ? argsStr.substring(0, 60) + '...' : argsStr;
+
+      let output = `<green>[TOOL]</green> ${name} <dim>${argsPreview} (${elapsed}ms)`;
+      if (isDebugMode()) {
+        const lines = result.split('\n').filter((l) => l.trim());
+        let summary: string;
+        if (lines.length <= 3) {
+          summary = lines.join(', ');
+          if (summary.length > 60) summary = summary.substring(0, 60) + '...';
+        } else {
+          const preview = lines.slice(0, 3).join(', ');
+          summary = preview.length > 50 ? preview.substring(0, 50) + '...' : preview;
+          summary += ` (+${lines.length - 3} more)`;
+        }
+        output += ` -> ${summary}`;
+      }
+      output += '</dim>';
+      log(output);
     },
   });
 
