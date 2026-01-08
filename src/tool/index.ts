@@ -5,3 +5,4 @@ import './write_file/index.js';
 import './list_directory/index.js';
 import './run_command/index.js';
 import './read_tool_manual/index.js';
+import './read_procedure/index.js';

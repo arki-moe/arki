@@ -1,5 +1,5 @@
 import { Agent, SystemMsg } from '../index.js';
-import { adapter, workingDir } from '../../global.js';
+import { adapter, workingDir, PROCEDURES } from '../../global.js';
 import { log, isDebugMode, createColorConverter } from '../../log/index.js';
 import { HAS_MANUAL } from '../../tool/Tool.js';
 import systemPromptTemplate from './system.md';
@@ -15,9 +15,15 @@ export function createMainAgent(): Agent {
     throw new Error('Adapter not initialized, please call init() first');
   }
 
+  // Generate procedures list
+  const proceduresList = Object.values(PROCEDURES)
+    .map((p) => `- ${p.name}: ${p.description}`)
+    .join('\n');
+
   const systemInstruction = Agent.renderTemplate(systemPromptTemplate, {
     working_dir: workingDir,
     has_manual: HAS_MANUAL,
+    procedures: proceduresList || '(none)',
   });
 
   const convertColor = createColorConverter();

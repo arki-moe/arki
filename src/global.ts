@@ -1,4 +1,5 @@
 import { Tool } from './tool/Tool.js';
+import { Procedure } from './procedure/Procedure.js';
 import { config } from './config/index.js';
 import { Adapter } from './adapter/Adapter.js';
 import { OpenAIAdapter } from './adapter/openai.js';
@@ -13,6 +14,9 @@ export function setWorkingDir(dir: string): void {
 
 /** Global tool registry */
 export const TOOLS: Record<string, Tool> = {};
+
+/** Global procedure registry */
+export const PROCEDURES: Record<string, Procedure> = {};
 
 /** Global Adapter instance */
 export let adapter: Adapter | null = null;

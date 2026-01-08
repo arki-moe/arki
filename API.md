@@ -8,7 +8,7 @@ This documentation is for developers and LLMs, containing complete API reference
 arki/
 ├── src/
 │   ├── index.ts          # CLI entry + library exports
-│   ├── global.ts         # Global variables and initialization (includes global adapter and TOOLS)
+│   ├── global.ts         # Global variables and initialization (includes global adapter, TOOLS, and PROCEDURES)
 │   ├── log/
 │   │   ├── index.ts      # Color definitions, XML tag conversion, and export entry
 │   │   ├── debug.ts      # Debug mode and logging
@@ -41,7 +41,14 @@ arki/
 │   │   ├── write_file/
 │   │   ├── list_directory/
 │   │   ├── run_command/
-│   │   └── read_tool_manual/
+│   │   ├── read_tool_manual/
+│   │   └── read_procedure/
+│   ├── procedure/
+│   │   ├── Procedure.ts  # Procedure class definition
+│   │   ├── index.ts      # Procedure exports and registration
+│   │   └── understand_project/
+│   │       ├── index.ts      # understand_project procedure
+│   │       └── procedure.md  # Procedure steps
 │   └── md.d.ts           # .md file type declaration
 ├── bin/
 │   └── arki.js           # CLI entry script
@@ -505,6 +512,87 @@ Read the manual exactly once per tool - do not skip it, and do not read it repea
 - `list_directory` - List directory contents
 - `run_command` - Execute shell commands
 - `read_tool_manual` - View detailed usage instructions for tools
+- `read_procedure` - View step-by-step procedure for specific workflows
+
+## Procedure System
+
+Procedures are step-by-step guides for specific workflows. Unlike tools which execute actions, procedures provide structured guidance for the Agent to follow. Each procedure is placed in its own directory under `src/procedure/`:
+
+```typescript
+// src/procedure/my_procedure/index.ts
+import { Procedure } from '../Procedure.js';
+import { PROCEDURES } from '../../global.js';
+import procedureContent from './procedure.md';
+
+// Register procedure to global PROCEDURES
+PROCEDURES['my_procedure'] = new Procedure({
+  name: 'my_procedure',
+  procedureContent,
+});
+```
+
+### Procedure Class
+
+```typescript
+class Procedure {
+  readonly name: string;
+  readonly description: string;      // Parsed from first line of procedure.md
+  readonly manual: string;           // Content of procedure.md except first line (the steps)
+
+  constructor(config: {
+    name: string;
+    procedureContent: string;
+  });
+
+  static parseManual(content: string): { description: string; manual: string };
+}
+```
+
+### procedure.md Format
+
+Each procedure directory needs a `procedure.md` file:
+
+```markdown
+understand_project: Systematically explore and understand the current project structure
+
+1. Use `list_directory` on the root directory to get an overview
+   - Identify key directories (src, lib, tests, docs, etc.)
+   - Note configuration files (package.json, tsconfig.json, etc.)
+
+2. Use `read_file` on the main configuration file
+   - Project name and description
+   - Dependencies and their purposes
+
+3. Output the final report in this format:
+   ...
+```
+
+**First line format**: `procedure_name: description`
+- Before colon is the procedure name
+- After colon is the brief description
+- Content below the first line contains the step-by-step instructions
+
+### Global Procedure Registry
+
+Procedures are registered and accessed through the global `PROCEDURES` object:
+
+```typescript
+import { PROCEDURES } from 'arki';
+
+// Get procedure
+const procedure = PROCEDURES['understand_project'];
+
+// Access procedure content
+console.log(procedure.description);
+console.log(procedure.manual);
+
+// Get all procedures
+const allProcedures = Object.values(PROCEDURES);
+```
+
+### Built-in Procedures
+
+- `understand_project` - Systematically explore and understand project structure, output structured report
 
 ## Development
 
