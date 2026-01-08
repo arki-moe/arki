@@ -8,7 +8,7 @@ import { init, config, TOOLS, workingDir } from './global.js';
 import './tool/index.js';
 import { setDebugMode, isDebugMode, debug, log, colors } from './log/index.js';
 import { MODELS } from './model/index.js';
-import { createMainAgent } from './agent/main/index.js';
+import { createMainAgent } from './agent/Arki/index.js';
 import packageJson from '../package.json' with { type: 'json' };
 
 function getConfigPath(): string {

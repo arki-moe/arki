@@ -17,11 +17,11 @@ arki/
 │   │   ├── index.ts      # Agent export entry
 │   │   ├── Agent.ts      # Agent class implementation
 │   │   ├── Msg.ts        # Message type definitions and constructors
-│   │   └── main/
-│   │       ├── index.ts  # main agent creation logic
-│   │       ├── main.ts   # createMainAgent implementation
+│   │   └── Arki/
+│   │       ├── index.ts  # Arki agent creation logic
+│   │       ├── Arki.ts   # createMainAgent implementation
 │   │       ├── colors.ts # Streaming color tag conversion
-│   │       └── system.md # main agent system prompt
+│   │       └── system.md # Arki agent system prompt
 │   ├── adapter/
 │   │   ├── Adapter.ts    # LLM adapter base class
 │   │   ├── index.ts      # Adapter export entry
