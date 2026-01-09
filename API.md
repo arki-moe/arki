@@ -39,7 +39,6 @@ arki/
 │   │   ├── file.ts       # File operations (read, write, exists)
 │   │   └── dir.ts        # Directory operations (copy, exists, mkdir)
 │   ├── config/
-│   │   ├── index.ts      # Re-exports from init module
 │   │   ├── arki/         # Global config template (copied to ~/.config/arki or %APPDATA%\arki)
 │   │   │   └── config.json
 │   │   └── .arki/        # Project config template (copied to project/.arki)
