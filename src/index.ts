@@ -66,6 +66,12 @@ Options:
 /** Track tool start times for elapsed calculation */
 const toolStartTimes = new Map<string, number>();
 
+/** Track if current line needs newline before next log */
+let needsNewline = false;
+
+/** Track if stream prefix has been printed for current run */
+let streamPrefixPrinted = false;
+
 /**
  * Setup CLI output subscriptions for an agent
  * Arki prints by default, other agents only print in debug mode
@@ -77,7 +83,14 @@ function setupAgentOutput(agentName: string): void {
   // Subscribe to Stream events
   subscribe(StreamEvent, agentName, (event) => {
     if (isPrimaryAgent || isDebugMode()) {
+      // Print prefix on first chunk
+      if (!streamPrefixPrinted) {
+        print(`<gray>[${getTimestamp()}]</gray> <cyan>[${agentName}]</cyan> `, false);
+        streamPrefixPrinted = true;
+      }
       process.stdout.write(convertColor(event.chunk));
+      // Track if output ends without newline
+      needsNewline = !event.chunk.endsWith('\n');
     }
   });
 
@@ -89,6 +102,12 @@ function setupAgentOutput(agentName: string): void {
   // Subscribe to ToolResult events
   subscribe(ToolResultEvent, agentName, (event) => {
     if (!isPrimaryAgent && !isDebugMode()) return;
+
+    // Ensure we're on a new line before logging
+    if (needsNewline) {
+      print('');
+      needsNewline = false;
+    }
 
     const { toolName, args, result } = event;
     const key = `${agentName}.${toolName}`;
@@ -203,14 +222,22 @@ async function main() {
 
       print('');
       try {
-        print(`<gray>[${getTimestamp()}]</gray> <cyan>[${agent.name}]</cyan> `, false);
+        // Reset stream prefix flag for new run
+        streamPrefixPrinted = false;
+        needsNewline = false;
+        
         const result = await agent.run(trimmed);
 
         if (result.usage) {
           const contextLimit = model?.capabilities.contextWindow || 0;
           const tokensInfo = `[Tokens: ${formatNumber(result.usage.totalTokens)} (cached: ${formatNumber(result.usage.cachedTokens || 0)}) / ${formatNumber(contextLimit)}]`;
+          // Print on same line as stream output (no leading newline)
           print(`<dim>${tokensInfo}</dim>`);
+        } else if (needsNewline) {
+          // Only add newline if no usage info and stream didn't end with newline
+          print('');
         }
+        needsNewline = false;
 
       } catch (err) {
         error(`${err instanceof Error ? err.message : String(err)}`);
