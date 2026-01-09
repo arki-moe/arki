@@ -4,7 +4,7 @@
  * Supports XML-style color tags: <red>text</red>, <bold>text</bold>, etc.
  */
 
-import { colors, convertColorTags } from './index.js';
+import { convertColorTags } from './index.js';
 
 /**
  * Get current timestamp string (HH:MM:SS.mmm)
@@ -14,13 +14,20 @@ function getTimestamp(): string {
 }
 
 /**
+ * Print output without timestamp (for prompts and simple messages)
+ * @param message Message string with optional XML color tags
+ */
+export function print(message: string): void {
+  console.log(convertColorTags(message));
+}
+
+/**
  * Log output with timestamp and XML color tag support
  * @param message Message string with optional XML color tags
  * @example log('<yellow>[TOOL]</yellow> read_file <dim>{"path":"test.txt"}</dim>')
  */
 export function log(message: string): void {
-  const ts = `<gray>[${getTimestamp()}]</gray>`;
-  console.log(convertColorTags(`${ts} ${message}`));
+  print(`<gray>[${getTimestamp()}]</gray> ${message}`);
 }
 
 /**
