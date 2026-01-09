@@ -45,6 +45,7 @@ arki [options]
 Options:
   -p <path>      Specify working directory
   --debug, -d    Enable debug mode, show detailed logs
+  --init         Initialize project config without prompting
   --reset        Reset configuration to factory defaults
   --help, -h     Show help information
 ```
@@ -99,6 +100,7 @@ Each project can have its own configuration in `.arki/` directory:
 - `.arki/state.json` - Project state and cache
 
 On first run in a new project, Arki will ask if you trust the project before initializing the `.arki/` directory.
+Use `--init` to skip the prompt in non-interactive environments.
 
 ### Reset to Factory Defaults
 
