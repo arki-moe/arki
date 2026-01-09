@@ -1,6 +1,6 @@
 {
   "name": "arki",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "AI Agent Programming Assistant",
   "type": "module",
   "main": "dist/index.js",
