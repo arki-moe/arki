@@ -48,14 +48,14 @@ export function initAdapter(): void {
 }
 
 /** Initialize global state */
-export async function init(cwd?: string): Promise<void> {
+export async function init(cwd?: string, forceInit?: boolean): Promise<void> {
   const { setWorkingDir } = await import('../fs/index.js');
   setWorkingDir(cwd || process.cwd());
 
   await initGlobalConfig();
 
   const { initProject } = await import('./project.js');
-  await initProject();
+  await initProject(forceInit);
 
   const { loadConfigs, getAgentConfig, getApiKey } = await import('./loader.js');
   await loadConfigs();
