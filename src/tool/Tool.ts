@@ -15,6 +15,8 @@ export class Tool {
   readonly parameters: Record<string, unknown>;
   readonly required: string[];
   readonly manual: string;
+  /** Whether this tool is async (non-blocking, result via AsyncToolResultMsg) */
+  readonly isAsync: boolean;
   private readonly _execute: (args: Record<string, unknown>) => Promise<string | { content: string; isError?: boolean }>;
 
   constructor(config: {
@@ -23,11 +25,14 @@ export class Tool {
     required: string[];
     manualContent: string;
     execute: (args: Record<string, unknown>) => Promise<string | { content: string; isError?: boolean }>;
+    /** Whether this tool is async (default: false) */
+    isAsync?: boolean;
   }) {
     this.name = config.name;
     this.parameters = config.parameters;
     this.required = config.required;
     this._execute = config.execute;
+    this.isAsync = config.isAsync ?? false;
 
     const { description, manual } = Tool.parseManual(config.manualContent);
     this.description = description;

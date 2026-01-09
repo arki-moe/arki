@@ -2,7 +2,6 @@ import { Agent, SystemMsg } from '../index.js';
 import { getAdapter, workingDir, PROCEDURES, TOOLS } from '../../global.js';
 import { getAgentConfig } from '../../init/index.js';
 import { MODELS } from '../../model/index.js';
-import { log, isDebugMode, createColorConverter } from '../../log/index.js';
 import { HAS_MANUAL } from '../../tool/Tool.js';
 import systemPromptTemplate from './system.md';
 
@@ -21,9 +20,6 @@ const ARKI_TOOLS = [
 
 /** Procedures available for Arki agent */
 const ARKI_PROCEDURES = ['understand_project'];
-
-/** Track tool start times for elapsed calculation */
-const toolStartTimes = new Map<string, number>();
 
 /**
  * Create arki agent
@@ -49,10 +45,8 @@ export function createArkiAgent(): Agent {
     procedures: proceduresList || '(none)',
   });
 
-  const agentName = 'Arki';
-  const convertColor = createColorConverter();
   const agent = new Agent({
-    name: agentName,
+    name: 'Arki',
     adapter,
     model: config.model,
     tools,
@@ -62,37 +56,6 @@ export function createArkiAgent(): Agent {
       reasoningEffort: config.reasoningEffort,
     },
     messages: [new SystemMsg(systemInstruction)],
-    onStream: (chunk) => {
-      process.stdout.write(convertColor(chunk));
-    },
-    onBeforeToolRun: (toolName) => {
-      toolStartTimes.set(toolName, Date.now());
-    },
-    onToolResult: (toolName, args, result) => {
-      const startTime = toolStartTimes.get(toolName) || Date.now();
-      const elapsed = Date.now() - startTime;
-      toolStartTimes.delete(toolName);
-
-      const argsStr = JSON.stringify(args);
-      const argsPreview = argsStr.length > 60 ? argsStr.substring(0, 60) + '...' : argsStr;
-
-      let output = `<cyan>[${agentName}]</cyan><green>[${toolName}]</green> <dim>${argsPreview} (${elapsed}ms)`;
-      if (isDebugMode()) {
-        const lines = result.split('\n').filter((l) => l.trim());
-        let summary: string;
-        if (lines.length <= 3) {
-          summary = lines.join(', ');
-          if (summary.length > 60) summary = summary.substring(0, 60) + '...';
-        } else {
-          const preview = lines.slice(0, 3).join(', ');
-          summary = preview.length > 50 ? preview.substring(0, 50) + '...' : preview;
-          summary += ` (+${lines.length - 3} more)`;
-        }
-        output += ` -> ${summary}`;
-      }
-      output += '</dim>';
-      log(output);
-    },
   });
 
   return agent;

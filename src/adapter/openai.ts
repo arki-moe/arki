@@ -1,6 +1,6 @@
 import OpenAI from 'openai';
 import { Adapter, AdapterOptions, AdapterResponse, ReasoningEffort } from './Adapter.js';
-import { Msg, MsgType, ToolCallMsg, ToolCall, AIMsg, ToolResultMsg } from '../agent/Msg.js';
+import { Msg, MsgType, ToolCallMsg, ToolCall, AIMsg, ToolResultMsg, AsyncToolResultMsg } from '../agent/Msg.js';
 import { Tool } from '../tool/Tool.js';
 import { debug } from '../log/index.js';
 
@@ -39,14 +39,35 @@ export class OpenAIAdapter extends Adapter {
       } else if (msg.type === MsgType.ToolCall) {
         const toolCallMsg = msg as ToolCallMsg;
         pendingIds = toolCallMsg.toolCalls.map((_, i) => `call_${msg.timestamp}_${i}`);
+
+        // Build content, include async tool call identification info
+        let content: string | null = msg.content || null;
+        const asyncCalls = toolCallMsg.toolCalls.filter((tc) => tc.asyncCallId);
+        if (asyncCalls.length > 0) {
+          const asyncInfo = asyncCalls
+            .map((tc) => `[Async Call #${tc.asyncCallId}] ${tc.name}`)
+            .join('; ');
+          content = content ? `${content}\n${asyncInfo}` : asyncInfo;
+        }
+
         result.push({
           role: 'assistant',
-          content: msg.content || null,
+          content,
           tool_calls: toolCallMsg.toolCalls.map((tc, i) => ({
             id: pendingIds[i],
             type: 'function',
             function: { name: tc.name, arguments: JSON.stringify(tc.arguments) },
           })),
+        });
+      } else if (msg.type === MsgType.AsyncToolResult) {
+        // Convert AsyncToolResultMsg to UserMsg (no corresponding tool call message)
+        const asyncMsg = msg as AsyncToolResultMsg;
+        const resultContent = asyncMsg.isError
+          ? `[Async Tool Result #${asyncMsg.asyncCallId}] ${asyncMsg.toolName} Error: ${asyncMsg.result}`
+          : `[Async Tool Result #${asyncMsg.asyncCallId}] ${asyncMsg.toolName}: ${asyncMsg.result}`;
+        result.push({
+          role: 'user',
+          content: resultContent,
         });
       } else if (msg.type === MsgType.ToolResult) {
         const toolResultMsg = msg as ToolResultMsg;

@@ -7,6 +7,7 @@ export enum MsgType {
   AI = 'ai',
   ToolCall = 'tool_call',
   ToolResult = 'tool_result',
+  AsyncToolResult = 'async_tool_result',
 }
 
 /**
@@ -61,6 +62,8 @@ export class AIMsg extends Msg {
  */
 export interface ToolCall {
   name: string;
+  /** Async tool call tracking ID (only for async tools) */
+  asyncCallId?: string;
   arguments: Record<string, unknown>;
 }
 
@@ -83,6 +86,8 @@ export class ToolCallMsg extends Msg {
 export interface ToolResult {
   toolName: string;
   result: string;
+  /** If present, this is a placeholder for async tool (real result via AsyncToolResultMsg) */
+  asyncCallId?: string;
   isError?: boolean;
 }
 
@@ -103,4 +108,28 @@ export class ToolResultMsg extends Msg {
     return new ToolResultMsg([{ toolName, result, isError }]);
   }
 }
+/**
+ * Async tool result message (independent, does not depend on ToolResult)
+ * Contains only one call result
+ */
+export class AsyncToolResultMsg extends Msg {
+  readonly type = MsgType.AsyncToolResult;
+  /** Tracking ID, links to original async tool call */
+  readonly asyncCallId: string;
+  readonly toolName: string;
+  readonly result: string;
+  readonly isError?: boolean;
+
+  constructor(asyncCallId: string, toolName: string, result: string, isError?: boolean) {
+    // Content includes full tracking info for Agent understanding
+    super(`[Async Result #${asyncCallId}] Tool "${toolName}" completed`);
+    this.asyncCallId = asyncCallId;
+    this.toolName = toolName;
+    this.result = result;
+    this.isError = isError;
+  }
+}
+
+
+
 

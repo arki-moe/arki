@@ -7,7 +7,8 @@ import * as os from 'os';
 import { init, getAgentConfig, TOOLS, PROCEDURES, workingDir, OS } from './global.js';
 import './tool/index.js';
 import './procedure/index.js';
-import { setDebugMode, isDebugMode, debug, log, print, formatNumber, convertColorTags, getTimestamp } from './log/index.js';
+import { setDebugMode, isDebugMode, debug, log, print, formatNumber, convertColorTags, getTimestamp, createColorConverter } from './log/index.js';
+import { subscribe, StreamEvent, BeforeToolRunEvent, ToolResultEvent } from './event_bus/index.js';
 import { MODELS } from './model/index.js';
 import { createArkiAgent } from './agent/Arki/index.js';
 import packageJson from '../package.json' with { type: 'json' };
@@ -62,6 +63,61 @@ Options:
   return { targetDir, enableDebug, forceInit };
 }
 
+/** Track tool start times for elapsed calculation */
+const toolStartTimes = new Map<string, number>();
+
+/**
+ * Setup CLI output subscriptions for an agent
+ * Arki prints by default, other agents only print in debug mode
+ */
+function setupAgentOutput(agentName: string): void {
+  const isPrimaryAgent = agentName === 'Arki';
+  const convertColor = createColorConverter();
+
+  // Subscribe to Stream events
+  subscribe(StreamEvent, agentName, (event) => {
+    if (isPrimaryAgent || isDebugMode()) {
+      process.stdout.write(convertColor(event.chunk));
+    }
+  });
+
+  // Subscribe to BeforeToolRun events
+  subscribe(BeforeToolRunEvent, agentName, (event) => {
+    toolStartTimes.set(`${agentName}.${event.toolName}`, Date.now());
+  });
+
+  // Subscribe to ToolResult events
+  subscribe(ToolResultEvent, agentName, (event) => {
+    if (!isPrimaryAgent && !isDebugMode()) return;
+
+    const { toolName, args, result } = event;
+    const key = `${agentName}.${toolName}`;
+    const startTime = toolStartTimes.get(key) || Date.now();
+    const elapsed = Date.now() - startTime;
+    toolStartTimes.delete(key);
+
+    const argsStr = JSON.stringify(args);
+    const argsPreview = argsStr.length > 60 ? argsStr.substring(0, 60) + '...' : argsStr;
+
+    let output = `<cyan>[${agentName}]</cyan><green>[${toolName}]</green> <dim>${argsPreview} (${elapsed}ms)`;
+    if (isDebugMode()) {
+      const lines = result.split('\n').filter((l) => l.trim());
+      let summary: string;
+      if (lines.length <= 3) {
+        summary = lines.join(', ');
+        if (summary.length > 60) summary = summary.substring(0, 60) + '...';
+      } else {
+        const preview = lines.slice(0, 3).join(', ');
+        summary = preview.length > 50 ? preview.substring(0, 50) + '...' : preview;
+        summary += ` (+${lines.length - 3} more)`;
+      }
+      output += ` -> ${summary}`;
+    }
+    output += '</dim>';
+    log(output);
+  });
+}
+
 async function main() {
   const { targetDir, enableDebug, forceInit } = parseArgs();
   
@@ -88,6 +144,9 @@ async function main() {
   console.log();
 
   const agent = createArkiAgent();
+
+  // Setup CLI output subscriptions
+  setupAgentOutput(agent.name);
 
   const rl = readline.createInterface({
     input: process.stdin,

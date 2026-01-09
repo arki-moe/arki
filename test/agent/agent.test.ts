@@ -3,6 +3,14 @@ import { Agent } from '../../src/agent/Agent.js';
 import { MsgType, ToolCallMsg, ToolCall, Msg, AIMsg, SystemMsg, ToolResultMsg } from '../../src/agent/Msg.js';
 import { Adapter, AdapterOptions, AdapterResponse } from '../../src/adapter/Adapter.js';
 import { Tool } from '../../src/tool/Tool.js';
+import {
+  subscribe,
+  eventBus,
+  StreamEvent,
+  ToolCallReceivedEvent,
+  BeforeToolRunEvent,
+  ToolResultEvent,
+} from '../../src/event_bus/index.js';
 
 // Create a mock adapter
 class MockAdapter extends Adapter {
@@ -63,6 +71,7 @@ describe('Agent', () => {
 
   afterEach(() => {
     vi.restoreAllMocks();
+    eventBus.clear(); // Clear event subscriptions between tests
   });
 
   describe('constructor', () => {
@@ -208,71 +217,98 @@ describe('Agent', () => {
       expect(result.usage?.totalTokens).toBe(450);
     });
 
-    it('should call onToolCallMsg callback', async () => {
-      const onToolCallMsg = vi.fn();
+    it('should publish ToolCallReceived event', async () => {
+      const onToolCallReceived = vi.fn();
 
-      const callbackAgent = new Agent({
+      const eventAgent = new Agent({
+        name: 'test-agent',
         adapter: mockAdapter,
         model: 'test-model',
         tools: [mockTool],
         messages: [new SystemMsg('System')],
-        onToolCallMsg,
       });
 
-      const toolCallMessage = new ToolCallMsg('', [{ name: 'test_tool', arguments: { input: 'test' } }]);
+      // Subscribe to ToolCallReceivedEvent
+      subscribe(ToolCallReceivedEvent, 'test-agent', onToolCallReceived);
+
       mockAdapter.setResponses([
-        { message: toolCallMessage, hasToolCalls: true },
+        { message: new ToolCallMsg('', [{ name: 'test_tool', arguments: { input: 'test' } }]), hasToolCalls: true },
         { message: new AIMsg('Done'), hasToolCalls: false },
       ]);
 
-      await callbackAgent.run('Test');
+      await eventAgent.run('Test');
 
-      expect(onToolCallMsg).toHaveBeenCalledTimes(1);
-      expect(onToolCallMsg).toHaveBeenCalledWith(toolCallMessage);
+      expect(onToolCallReceived).toHaveBeenCalledTimes(1);
+      expect(onToolCallReceived).toHaveBeenCalledWith(
+        expect.objectContaining({
+          agentName: 'test-agent',
+          toolCalls: [{ name: 'test_tool', arguments: { input: 'test' } }],
+        })
+      );
     });
 
-    it('should call onToolResult callback', async () => {
+    it('should publish ToolResult event', async () => {
       const onToolResult = vi.fn();
 
-      const callbackAgent = new Agent({
+      const eventAgent = new Agent({
+        name: 'test-agent',
         adapter: mockAdapter,
         model: 'test-model',
         tools: [mockTool],
         messages: [new SystemMsg('System')],
-        onToolResult,
       });
+
+      // Subscribe to ToolResultEvent
+      subscribe(ToolResultEvent, 'test-agent', onToolResult);
 
       mockAdapter.setResponses([
         { message: new ToolCallMsg('', [{ name: 'test_tool', arguments: { input: 'test' } }]), hasToolCalls: true },
         { message: new AIMsg('Done'), hasToolCalls: false },
       ]);
 
-      await callbackAgent.run('Test');
+      await eventAgent.run('Test');
 
       expect(onToolResult).toHaveBeenCalledTimes(1);
-      expect(onToolResult).toHaveBeenCalledWith('test_tool', { input: 'test' }, 'Tool executed successfully');
+      expect(onToolResult).toHaveBeenCalledWith(
+        expect.objectContaining({
+          agentName: 'test-agent',
+          toolName: 'test_tool',
+          args: { input: 'test' },
+          result: 'Tool executed successfully',
+          isError: undefined,
+        })
+      );
     });
 
-    it('should call onBeforeToolRun callback', async () => {
+    it('should publish BeforeToolRun event', async () => {
       const onBeforeToolRun = vi.fn();
 
-      const callbackAgent = new Agent({
+      const eventAgent = new Agent({
+        name: 'test-agent',
         adapter: mockAdapter,
         model: 'test-model',
         tools: [mockTool],
         messages: [new SystemMsg('System')],
-        onBeforeToolRun,
       });
+
+      // Subscribe to BeforeToolRunEvent
+      subscribe(BeforeToolRunEvent, 'test-agent', onBeforeToolRun);
 
       mockAdapter.setResponses([
         { message: new ToolCallMsg('', [{ name: 'test_tool', arguments: { input: 'test' } }]), hasToolCalls: true },
         { message: new AIMsg('Done'), hasToolCalls: false },
       ]);
 
-      await callbackAgent.run('Test');
+      await eventAgent.run('Test');
 
       expect(onBeforeToolRun).toHaveBeenCalledTimes(1);
-      expect(onBeforeToolRun).toHaveBeenCalledWith('test_tool', { input: 'test' });
+      expect(onBeforeToolRun).toHaveBeenCalledWith(
+        expect.objectContaining({
+          agentName: 'test-agent',
+          toolName: 'test_tool',
+          args: { input: 'test' },
+        })
+      );
     });
   });
 
@@ -300,23 +336,31 @@ describe('Agent', () => {
   });
 
   describe('streaming', () => {
-    it('should call onStream callback', async () => {
+    it('should publish Stream event', async () => {
       const onStream = vi.fn();
 
       const streamAgent = new Agent({
+        name: 'test-agent',
         adapter: mockAdapter,
         model: 'test-model',
         tools: [],
         messages: [new SystemMsg('System')],
-        onStream,
       });
+
+      // Subscribe to StreamEvent
+      subscribe(StreamEvent, 'test-agent', onStream);
 
       mockAdapter.setResponses([{ message: new AIMsg('Streamed response'), hasToolCalls: false }]);
 
       const result = await streamAgent.run('Stream test');
 
       expect(result.response).toBe('Streamed response');
-      expect(onStream).toHaveBeenCalledWith('Streamed response');
+      expect(onStream).toHaveBeenCalledWith(
+        expect.objectContaining({
+          agentName: 'test-agent',
+          chunk: 'Streamed response',
+        })
+      );
     });
   });
 });

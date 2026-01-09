@@ -13,6 +13,10 @@ arki/
 │   │   ├── index.ts      # Color definitions, XML tag conversion, and export entry
 │   │   ├── debug.ts      # Debug mode and logging
 │   │   └── log.ts        # General logging functions (supports XML color tags)
+│   ├── event_bus/
+│   │   ├── index.ts      # EventBus export entry
+│   │   ├── Event.ts      # Event base class and concrete event classes
+│   │   └── EventBus.ts   # EventBus singleton, subscribe/publish functions
 │   ├── agent/
 │   │   ├── index.ts      # Agent export entry
 │   │   ├── Agent.ts      # Agent class implementation
@@ -102,6 +106,7 @@ enum MsgType {
   AI = 'ai',
   ToolCall = 'tool_call',
   ToolResult = 'tool_result',
+  AsyncToolResult = 'async_tool_result',
 }
 
 // Base message class
@@ -112,7 +117,7 @@ abstract class Msg {
 }
 
 // Message classes (union type)
-type Msg = SystemMsg | UserMsg | AIMsg | ToolCallMsg | ToolResultMsg;
+type Msg = SystemMsg | UserMsg | AIMsg | ToolCallMsg | ToolResultMsg | AsyncToolResultMsg;
 
 class SystemMsg extends Msg {
   readonly type = MsgType.System;
@@ -133,6 +138,7 @@ class AIMsg extends Msg {
 interface ToolCall {
   name: string;
   arguments: Record<string, unknown>;
+  asyncCallId?: string;  // Async tool call tracking ID (only for async tools)
 }
 
 class ToolCallMsg extends Msg {
@@ -146,6 +152,7 @@ interface ToolResult {
   toolName: string;
   result: string;
   isError?: boolean;
+  asyncCallId?: string;  // If present, this is a placeholder for async tool
 }
 
 // Tool result message (contains multiple results for multi-platform compatibility)
@@ -156,6 +163,17 @@ class ToolResultMsg extends Msg {
 
   // Helper: create from single result
   static single(toolName: string, result: string, isError?: boolean): ToolResultMsg;
+}
+
+// Async tool result message (independent, does not depend on ToolResult)
+class AsyncToolResultMsg extends Msg {
+  readonly type = MsgType.AsyncToolResult;
+  readonly asyncCallId: string;   // Tracking ID, links to original async tool call
+  readonly toolName: string;
+  readonly result: string;
+  readonly isError?: boolean;
+
+  constructor(asyncCallId: string, toolName: string, result: string, isError?: boolean);
 }
 ```
 
@@ -261,19 +279,18 @@ interface AgentResponse {
 }
 
 interface AgentConfig {
+  name: string;                 // Agent name (used for EventBus events)
   adapter: Adapter;
   model: string;                // Model ID (provider derived from MODELS)
   tools: Tool[];                // Tools available to agent
   platformOptions?: AdapterOptions;  // Platform-specific options (flex, reasoningEffort, etc.)
   messages: Msg[];
   maxCompletionTokens?: number; // Maximum completion tokens for LLM response
-  onStream?: (chunk: string) => void;
-  onToolCallMsg?: (msg: ToolCallMsg) => void;  // Receive complete tool call message
-  onBeforeToolRun?: (name: string, args: Record<string, unknown>) => void;  // Called before each tool execution
-  onToolResult?: (name: string, args: Record<string, unknown>, result: string) => void;  // Called after each tool execution
 }
 
 class Agent {
+  readonly name: string;
+
   constructor(config: AgentConfig);
 
   static renderTemplate(template: string, variables: Record<string, string | number | boolean>): string;
@@ -282,10 +299,13 @@ class Agent {
 }
 ```
 
+**Note**: Agent no longer uses callback hooks. Use the EventBus system to subscribe to agent events instead. See [EventBus System](#eventbus-system) section.
+
 Usage example:
 
 ```typescript
 import { Agent, SystemMsg } from 'arki';
+import { subscribe, StreamEvent, ToolResultEvent } from 'arki';
 import systemTemplate from './system.md';
 
 // Use Agent.renderTemplate to render template
@@ -303,21 +323,21 @@ const model = MODELS[config.model];
 const adapter = getAdapter(model.provider);
 
 const agent = new Agent({
+  name: 'MyAgent',
   adapter,
   model: config.model,
   tools: Object.values(TOOLS),
   platformOptions: { flex: config.flex, reasoningEffort: config.reasoningEffort },
   messages: [new SystemMsg(systemInstruction)],
-  onStream: (chunk) => process.stdout.write(chunk),
-  onToolCallMsg: (msg) => {
-    console.log('Received tool calls:', msg.toolCalls.map(tc => tc.name));
-  },
-  onBeforeToolRun: (name) => {
-    // Record start time for elapsed calculation
-  },
-  onToolResult: (name, args, result) => {
-    log(`<green>[TOOL]</green> ${name} <dim>${JSON.stringify(args)}</dim>`);
-  },
+});
+
+// Subscribe to events using EventBus
+subscribe(StreamEvent, agent.name, (event) => {
+  process.stdout.write(event.chunk);
+});
+
+subscribe(ToolResultEvent, agent.name, (event) => {
+  console.log(`Tool ${event.toolName} completed in ${event.result.length} chars`);
 });
 
 // Method 2: Manually create adapter
@@ -326,18 +346,12 @@ import { OpenAIAdapter, TOOLS } from 'arki';
 const openaiAdapter = new OpenAIAdapter(process.env.OPENAI_API_KEY || '');
 
 const agent = new Agent({
+  name: 'MyAgent',
   adapter: openaiAdapter,
   model: 'gpt-5.1',
   tools: Object.values(TOOLS),
   platformOptions: { flex: false },
   messages: [new SystemMsg(systemInstruction)],
-  onStream: (chunk) => process.stdout.write(chunk),
-  onBeforeToolRun: (name, args) => {
-    console.log('Calling tool:', name, args);
-  },
-  onToolResult: (name, args, result) => {
-    console.log('Tool result:', name, result.substring(0, 100));
-  },
 });
 
 // Run
@@ -368,6 +382,121 @@ const agent = new Agent({
   ],
 });
 ```
+
+## EventBus System
+
+The EventBus provides a publish-subscribe pattern for Agent lifecycle events. This decouples the Agent from output handling, allowing different frontends (CLI, Web, etc.) to handle events differently.
+
+### Event Classes
+
+All events inherit from the base `Event` class:
+
+```typescript
+abstract class Event {
+  readonly agentName: string;
+  readonly timestamp: number;
+}
+```
+
+Available event classes:
+
+```typescript
+// Stream output event
+class StreamEvent extends Event {
+  readonly chunk: string;
+}
+
+// Tool call received event
+class ToolCallReceivedEvent extends Event {
+  readonly toolCalls: ToolCall[];
+}
+
+// Before tool run event
+class BeforeToolRunEvent extends Event {
+  readonly toolName: string;
+  readonly args: Record<string, unknown>;
+}
+
+// Tool result event
+class ToolResultEvent extends Event {
+  readonly toolName: string;
+  readonly args: Record<string, unknown>;
+  readonly result: string;
+  readonly isError?: boolean;
+}
+
+// Async tool result event
+class AsyncToolResultEvent extends Event {
+  readonly asyncCallId: string;
+  readonly toolName: string;
+  readonly args: Record<string, unknown>;
+  readonly result: string;
+  readonly isError?: boolean;
+}
+
+// Agent run start event
+class RunStartEvent extends Event {
+  readonly userInput: string;
+}
+
+// Agent run end event
+class RunEndEvent extends Event {
+  readonly response: string;
+  readonly toolCalls: Array<{ name: string; arguments: Record<string, unknown>; result: string }>;
+  readonly usage?: { promptTokens: number; completionTokens: number; totalTokens: number; cachedTokens?: number };
+}
+```
+
+### Subscribe and Publish
+
+```typescript
+import { subscribe, publish, StreamEvent, ToolResultEvent } from 'arki';
+
+// Subscribe to events for a specific agent
+const unsubscribe = subscribe(StreamEvent, 'MyAgent', (event) => {
+  console.log('Stream chunk:', event.chunk);
+});
+
+// Subscribe to events for all agents (wildcard)
+subscribe(ToolResultEvent, '*', (event) => {
+  console.log(`[${event.agentName}] Tool ${event.toolName} completed`);
+});
+
+// Unsubscribe when done
+unsubscribe();
+
+// Publish events (typically done by Agent internally)
+publish(new StreamEvent('MyAgent', 'Hello'));
+```
+
+### CLI Output Setup
+
+The CLI entry (`src/index.ts`) sets up event subscriptions for output:
+
+```typescript
+import { subscribe, StreamEvent, BeforeToolRunEvent, ToolResultEvent, createColorConverter } from 'arki';
+
+function setupAgentOutput(agentName: string): void {
+  const convertColor = createColorConverter();
+
+  subscribe(StreamEvent, agentName, (event) => {
+    process.stdout.write(convertColor(event.chunk));
+  });
+
+  subscribe(ToolResultEvent, agentName, (event) => {
+    log(`<cyan>[${agentName}]</cyan><green>[${event.toolName}]</green> <dim>completed</dim>`);
+  });
+}
+
+// Setup output for the main agent
+const agent = createArkiAgent();
+setupAgentOutput(agent.name);
+```
+
+This separation allows:
+- Agent code to remain pure (no CLI dependencies)
+- Different frontends to subscribe and render events differently
+- Easy testing by mocking event handlers
 
 ## Template Rendering
 
@@ -445,6 +574,7 @@ class Tool {
   readonly parameters: Record<string, unknown>;
   readonly required: string[];
   readonly manual: string;           // Content of manual.md except first line
+  readonly isAsync: boolean;         // Whether this tool is async (non-blocking)
 
   constructor(config: {
     name: string;
@@ -452,12 +582,15 @@ class Tool {
     required: string[];
     manualContent: string;
     execute: (args: Record<string, unknown>) => Promise<string | { content: string; isError?: boolean }>;
+    isAsync?: boolean;               // Default: false
   });
 
   static parseManual(content: string): { description: string; manual: string };
   async run(args: Record<string, unknown>): Promise<ToolResult>;  // Returns single ToolResult
 }
 ```
+
+**Async Tools**: When `isAsync` is true, the tool is executed in the background. The Agent immediately returns a placeholder result and continues. When the async tool completes, an `AsyncToolResultMsg` is added to the message history and an `AsyncToolResultEvent` is published.
 
 ### manual.md Format
 
