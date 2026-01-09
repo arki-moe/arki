@@ -80,9 +80,25 @@ Ways to enable:
 1. Add `--debug` or `-d` parameter at startup
 2. Type `/debug` during runtime to toggle
 
-## Configuration File
+## Configuration
 
-Configuration file is located at `~/.config/arki/config.json`:
+### Global Configuration
+
+Global configuration is stored in system-specific locations:
+
+- **macOS/Linux**: `~/.config/arki/config.json`
+- **Windows**: `%APPDATA%\arki\config.json`
+
+On first run, Arki copies the default configuration template to this location.
+
+### Project Configuration
+
+Each project can have its own configuration in `.arki/` directory:
+
+- `.arki/config.json` - Project-specific settings (overrides global config)
+- `.arki/state.json` - Project state and cache
+
+On first run in a new project, Arki will ask if you trust the project before initializing the `.arki/` directory.
 
 ### Reset to Factory Defaults
 
@@ -90,7 +106,7 @@ Configuration file is located at `~/.config/arki/config.json`:
 arki --reset
 ```
 
-This will delete the current configuration file. The default configuration will be used on next startup.
+This will delete the global configuration file. The default configuration will be used on next startup.
 
 ## Development
 

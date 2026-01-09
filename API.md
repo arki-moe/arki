@@ -8,7 +8,7 @@ This documentation is for developers and LLMs, containing complete API reference
 arki/
 ├── src/
 │   ├── index.ts          # CLI entry + library exports
-│   ├── global.ts         # Global variables and initialization (includes global adapter, TOOLS, and PROCEDURES)
+│   ├── global.ts         # Re-exports from fs and init modules
 │   ├── log/
 │   │   ├── index.ts      # Color definitions, XML tag conversion, and export entry
 │   │   ├── debug.ts      # Debug mode and logging
@@ -28,10 +28,23 @@ arki/
 │   ├── model/
 │   │   ├── index.ts      # Type definitions and exports
 │   │   └── models.ts     # Model configuration data (MODELS)
+│   ├── init/
+│   │   ├── index.ts      # Initialization entry and re-exports
+│   │   ├── global.ts     # Global state (TOOLS, PROCEDURES, adapter) and init function
+│   │   ├── project.ts    # Project config initialization (trust prompt, copy template)
+│   │   └── loader.ts     # Config loading and merging
+│   ├── fs/
+│   │   ├── index.ts      # Re-exports from submodules
+│   │   ├── paths.ts      # OS detection, PATHS object, workingDir
+│   │   ├── file.ts       # File operations (read, write, exists)
+│   │   └── dir.ts        # Directory operations (copy, exists, mkdir)
 │   ├── config/
-│   │   ├── index.ts      # Configuration export entry
-│   │   ├── config.ts     # ConfigManager implementation
-│   │   └── config.json   # Default configuration
+│   │   ├── index.ts      # Re-exports from init module
+│   │   ├── arki/         # Global config template (copied to ~/.config/arki or %APPDATA%\arki)
+│   │   │   └── config.json
+│   │   └── .arki/        # Project config template (copied to project/.arki)
+│   │       ├── config.json
+│   │       └── state.json
 │   ├── tool/
 │   │   ├── Tool.ts       # Tool class definition
 │   │   ├── index.ts      # Tool exports and registration
@@ -462,6 +475,30 @@ Result: `description = "📘Execute shell command in the working directory"`, `m
 
 The project uses global state management, provided through `global.ts`:
 
+#### PATHS Object
+
+The global `PATHS` object provides cross-platform path management:
+
+```typescript
+import { PATHS } from 'arki';
+
+// PATHS type definition
+interface PATHS {
+  globalConfig: string;      // Global config directory (~/.config/arki or %APPDATA%\arki)
+  projectConfig: string;     // Project config directory (.arki/) - getter based on workingDir
+  globalTemplate: string;    // Package's global config template directory
+  projectTemplate: string;   // Package's project config template directory
+}
+
+// Usage
+console.log(PATHS.globalConfig);     // e.g., '/Users/name/.config/arki' or 'C:\Users\name\AppData\Roaming\arki'
+console.log(PATHS.projectConfig);    // e.g., '/path/to/project/.arki'
+```
+
+Path locations by OS:
+- **macOS/Linux**: `~/.config/arki/`
+- **Windows**: `%APPDATA%\arki\` (falls back to `%USERPROFILE%\AppData\Roaming\arki\`)
+
 #### OS Information
 
 The global `OS` object provides information about the current operating system:
@@ -514,6 +551,39 @@ if (adapter) {
 ```
 
 The global adapter uses settings from the main configuration (`config.agents.main`), including all registered tools. This avoids duplicate adapter instance creation.
+
+#### Initialization Flow
+
+The `init()` function performs three initialization steps:
+
+1. **Global Config Initialization** (`initGlobal`)
+   - Checks if global config directory exists
+   - If not, copies template from package to user's config directory
+
+2. **Project Config Initialization** (`initProject`)
+   - Checks if project `.arki/` directory exists
+   - If not, prompts user to trust the project
+   - If trusted, copies template to project directory
+
+3. **Config Loading** (`loadConfigs`)
+   - Loads global config from `PATHS.globalConfig/config.json`
+   - Loads project config from `PATHS.projectConfig/config.json` (if exists)
+   - Merges configs (project overrides global)
+   - Loads API keys from environment variables
+
+```typescript
+import { init } from 'arki';
+
+// Initialize with optional working directory
+await init('/path/to/project');
+
+// After init, configs are loaded and adapter is ready
+import { getConfig, getApiKey, getAgentConfig } from 'arki';
+
+const config = getConfig();
+const apiKey = getApiKey('openai');
+const mainConfig = getAgentConfig('main');
+```
 
 Tool definitions are passed to the API directly (name, description, parameters). Tools with detailed manual content will have the `📘` symbol prefix in their description.
 
@@ -611,6 +681,96 @@ const allProcedures = Object.values(PROCEDURES);
 ### Built-in Procedures
 
 - `understand_project` - Systematically explore and understand project structure, output structured report
+
+## File System Utilities
+
+The `src/fs` module provides common file system operations, organized into three submodules:
+
+### paths.ts - Path and OS Utilities
+
+```typescript
+import { OS, PATHS, workingDir, setWorkingDir } from 'arki';
+
+// OS information
+console.log(OS.name);     // 'windows' | 'mac' | 'linux' | 'other'
+console.log(OS.version);  // e.g., '24.5.0'
+
+// Path configuration
+console.log(PATHS.globalConfig);     // ~/.config/arki or %APPDATA%\arki
+console.log(PATHS.projectConfig);    // {workingDir}/.arki
+console.log(PATHS.globalTemplate);   // Package's config/arki template
+console.log(PATHS.projectTemplate);  // Package's config/.arki template
+
+// Working directory management
+console.log(workingDir);             // Current working directory
+setWorkingDir('/new/path');          // Change working directory
+```
+
+### file.ts - File Operations
+
+```typescript
+import { fileExists, readFile, writeFile, readJsonFile, writeJsonFile } from 'arki';
+
+// Check if file exists (returns false for directories)
+const exists = await fileExists('/path/to/file.txt');
+
+// Read/write text files (readFile returns null if not found)
+const content = await readFile('/path/to/file.txt');
+await writeFile('/path/to/file.txt', 'content');
+
+// Read/write JSON files (readJsonFile returns null if not found or invalid)
+const data = await readJsonFile<MyType>('/path/to/data.json');
+await writeJsonFile('/path/to/data.json', { key: 'value' });  // Pretty formatted
+```
+
+### dir.ts - Directory Operations
+
+```typescript
+import { dirExists, mkdir, copyDir } from 'arki';
+
+// Check if directory exists (returns false for files)
+const exists = await dirExists('/path/to/dir');
+
+// Create directory recursively (no error if exists)
+await mkdir('/path/to/new/dir');
+
+// Copy directory recursively (creates dest if not exists)
+await copyDir('/src/path', '/dest/path');
+```
+
+## Logging Utilities
+
+The `src/log` module provides logging functions with XML-style color tag support:
+
+```typescript
+import { print, log, info, success, warn, error } from 'arki';
+
+// print - Output without timestamp (for prompts and simple messages)
+print('Hello World');
+print('<green>Success!</green>');
+
+// log - Output with timestamp prefix
+log('Processing...');                    // [14:30:45.123] Processing...
+log('<yellow>[WARN]</yellow> Warning');  // [14:30:45.123] [WARN] Warning
+
+// Convenience functions (use log internally)
+info('Information');    // [14:30:45.123] [INFO] Information
+success('Done');        // [14:30:45.123] [OK] Done
+warn('Warning');        // [14:30:45.123] [WARN] Warning
+error('Error');         // [14:30:45.123] [ERROR] Error
+```
+
+### Color Tags
+
+Supported XML-style color tags:
+- Text colors: `<red>`, `<green>`, `<yellow>`, `<blue>`, `<magenta>`, `<cyan>`, `<gray>`
+- Styles: `<bold>`, `<dim>`, `<italic>`, `<underline>`, `<inverse>`, `<strikethrough>`
+
+```typescript
+print('<red>Error:</red> Something went wrong');
+print('<bold><green>Success!</green></bold>');
+log('<dim>Debug info</dim>');
+```
 
 ## Development
 
