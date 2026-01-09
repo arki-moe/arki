@@ -1,7 +1,7 @@
 import { Msg, MsgType, ToolCallMsg, UserMsg, ToolResultMsg, ToolResult, AsyncToolResultMsg } from './Msg.js';
 import { Adapter, AdapterOptions } from '../adapter/Adapter.js';
 import { Tool } from '../tool/Tool.js';
-import { debug } from '../log/index.js';
+import { debug, warn } from '../log/index.js';
 import {
   publish,
   StreamEvent,
@@ -87,7 +87,7 @@ export class Agent {
       if (value !== undefined) {
         return String(value);
       }
-      console.warn(`Warning: Variable "{{${varName}}}" not found in template`);
+      warn(`Variable "{{${varName}}}" not found in template`);
       return match;
     });
   }

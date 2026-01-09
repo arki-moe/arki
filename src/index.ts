@@ -7,7 +7,7 @@ import * as os from 'os';
 import { init, getAgentConfig, TOOLS, PROCEDURES, workingDir, OS } from './global.js';
 import './tool/index.js';
 import './procedure/index.js';
-import { setDebugMode, isDebugMode, debug, log, print, formatNumber, convertColorTags, getTimestamp, createColorConverter } from './log/index.js';
+import { setDebugMode, isDebugMode, debug, log, print, error, formatNumber, convertColorTags, getTimestamp, createColorConverter } from './log/index.js';
 import { subscribe, StreamEvent, BeforeToolRunEvent, ToolResultEvent } from './event_bus/index.js';
 import { MODELS } from './model/index.js';
 import { createArkiAgent } from './agent/Arki/index.js';
@@ -21,10 +21,10 @@ function resetConfig(): void {
   const configPath = getConfigPath();
   if (fs.existsSync(configPath)) {
     fs.unlinkSync(configPath);
-    console.log(`Configuration file deleted: ${configPath}`);
-    console.log('Default configuration will be used on next startup.');
+    print(`Configuration file deleted: ${configPath}`);
+    print('Default configuration will be used on next startup.');
   } else {
-    console.log('Configuration file does not exist, no reset needed.');
+    print('Configuration file does not exist, no reset needed.');
   }
   process.exit(0);
 }
@@ -46,7 +46,7 @@ function parseArgs() {
     } else if (args[i] === '--init') {
       forceInit = true;
     } else if (args[i] === '--help' || args[i] === '-h') {
-      console.log(`
+      print(`
 Usage: arki [options]
 
 Options:
@@ -131,7 +131,7 @@ async function main() {
   const arkiAgentConfig = getAgentConfig('Arki');
   const model = MODELS[arkiAgentConfig.model];
 
-  console.log();
+  print('');
   log(`<bold><cyan>Arki AI Agent</cyan></bold> <dim>v${packageJson.version}</dim>`);
   log(`<green>Model:</green> <bold>${model?.name || arkiAgentConfig.model}</bold> <dim>|</dim> <green>OS:</green> ${OS.name} <dim>(${OS.version})</dim>`);
   log(`<green>Path:</green> <dim>${workingDir}</dim>`);
@@ -141,7 +141,7 @@ async function main() {
     debug('Init', 'Loaded tools', Object.keys(TOOLS));
     debug('Init', 'Agent config', arkiAgentConfig);
   }
-  console.log();
+  print('');
 
   const agent = createArkiAgent();
 
@@ -155,7 +155,7 @@ async function main() {
 
   log(`<blue>Enter your question and press Enter to send. Type /exit or /quit to exit.</blue>`);
   log(`<blue>Type /clear to clear conversation history.</blue>`);
-  console.log();
+  print('');
 
   const promptStr = convertColorTags('<green>> </green>');
   const prompt = () => {
@@ -171,19 +171,19 @@ async function main() {
       if (trimmed === '/clear') {
         agent.reset();
         log(`<yellow>Conversation history cleared</yellow>`);
-        console.log();
+        print('');
         prompt();
         return;
       }
 
       if (trimmed === '/help') {
-        console.log();
+        print('');
         log(`<cyan>Available commands:</cyan>`);
         log(`<dim>  /exit, /quit  - Exit program</dim>`);
         log(`<dim>  /clear        - Clear conversation history</dim>`);
         log(`<dim>  /debug        - Toggle debug mode</dim>`);
         log(`<dim>  /help         - Show help</dim>`);
-        console.log();
+        print('');
         prompt();
         return;
       }
@@ -191,7 +191,7 @@ async function main() {
       if (trimmed === '/debug') {
         setDebugMode(!isDebugMode());
         log(`<yellow>Debug mode ${isDebugMode() ? 'enabled' : 'disabled'}</yellow>`);
-        console.log();
+        print('');
         prompt();
         return;
       }
@@ -201,7 +201,7 @@ async function main() {
         return;
       }
 
-      console.log();
+      print('');
       try {
         print(`<gray>[${getTimestamp()}]</gray> <cyan>[${agent.name}]</cyan> `, false);
         const result = await agent.run(trimmed);
@@ -212,9 +212,9 @@ async function main() {
           print(`<dim>${tokensInfo}</dim>`);
         }
 
-      } catch (error) {
-        log(`<red>Error: ${error instanceof Error ? error.message : String(error)}</red>`);
-        console.log();
+      } catch (err) {
+        error(`${err instanceof Error ? err.message : String(err)}`);
+        print('');
       }
 
       prompt();
@@ -232,7 +232,7 @@ export * from './agent/index.js';
 export * from './tool/index.js';
 export * from './model/index.js';
 
-main().catch((error) => {
-  console.error('Fatal error:', error);
+main().catch((err) => {
+  error(`Fatal error: ${err instanceof Error ? err.message : String(err)}`);
   process.exit(1);
 });

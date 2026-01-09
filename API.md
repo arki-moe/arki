@@ -934,6 +934,35 @@ pnpm test:coverage # Test coverage
 pnpm test:e2e      # E2E tests
 ```
 
+### Development Guidelines
+
+#### Logging System (Required)
+
+**All output must use the logging system from `src/log/`**. Do NOT use `console.log`, `console.error`, `console.warn`, or direct `process.stdout.write`.
+
+```typescript
+// ❌ DON'T use these
+console.log('message');
+console.error('error');
+console.warn('warning');
+process.stdout.write('output');
+
+// ✅ DO use these
+import { print, log, info, success, warn, error, debug } from './log/index.js';
+
+print('message');           // Simple output without timestamp
+log('message');             // Output with timestamp
+info('message');            // [INFO] prefix
+success('message');         // [OK] prefix
+warn('message');            // [WARN] prefix
+error('message');           // [ERROR] prefix
+debug('Category', 'msg');   // Debug output (only in debug mode)
+```
+
+**Exceptions**:
+- Streaming output in event handlers may use `process.stdout.write` with color converter for real-time display
+- The logging system implementation itself (`src/log/log.ts`)
+
 ### Build System
 
 The project uses `tsup` for building, automatically inlines `.md` files as JS strings:
