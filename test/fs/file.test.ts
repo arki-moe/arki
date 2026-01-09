@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import * as os from 'os';
-import { fileExists, readJsonFile, writeJsonFile, readFile, writeFile } from './file.js';
+import { fileExists, readJsonFile, writeJsonFile, readFile, writeFile } from '../../src/fs/file.js';
 
 describe('file', () => {
   let tempDir: string;

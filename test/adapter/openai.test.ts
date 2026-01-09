@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { MsgType, SystemMsg, UserMsg, AIMsg, ToolCallMsg, ToolResultMsg } from '../agent/Msg.js';
+import { MsgType, SystemMsg, UserMsg, AIMsg, ToolCallMsg, ToolResultMsg } from '../../src/agent/Msg.js';
 import {
   mockChatCreate,
   resetMocks,
@@ -7,13 +7,13 @@ import {
   createToolCallStreamResponse,
   createStreamResponse,
 } from '../__mocks__/openai.js';
-import { Tool } from '../tool/Tool.js';
+import { Tool } from '../../src/tool/Tool.js';
 
 // Mock the openai module
 vi.mock('openai', () => import('../__mocks__/openai.js'));
 
 // Import after mocking
-import { OpenAIAdapter } from './openai.js';
+import { OpenAIAdapter } from '../../src/adapter/openai.js';
 
 describe('OpenAIAdapter', () => {
   let adapter: OpenAIAdapter;

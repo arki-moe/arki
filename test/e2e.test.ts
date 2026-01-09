@@ -2,12 +2,12 @@ import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach } from
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import * as os from 'os';
-import { OpenAIAdapter } from '../adapter/openai.js';
-import { Agent } from '../agent/Agent.js';
-import { MsgType, SystemMsg, UserMsg } from '../agent/Msg.js';
-import { TOOLS, workingDir, setWorkingDir } from '../global.js';
+import { OpenAIAdapter } from '../src/adapter/openai.js';
+import { Agent } from '../src/agent/Agent.js';
+import { MsgType, SystemMsg, UserMsg } from '../src/agent/Msg.js';
+import { TOOLS, workingDir, setWorkingDir } from '../src/global.js';
 
-import '../tool/index.js';
+import '../src/tool/index.js';
 
 /**
  * E2E Tests - These tests make real API calls to OpenAI
@@ -17,7 +17,7 @@ import '../tool/index.js';
  * - These tests consume API credits
  *
  * Run with: pnpm test:e2e
- * Or: OPENAI_API_KEY=your-key pnpm test -- src/__tests__/e2e.test.ts
+ * Or: OPENAI_API_KEY=your-key pnpm test -- test/e2e.test.ts
  */
 
 const hasApiKey = !!process.env.OPENAI_API_KEY;

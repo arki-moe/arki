@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { MsgType } from './Msg.js';
+import { MsgType } from '../../src/agent/Msg.js';
 
 describe('MsgType', () => {
   it('should have correct values', () => {

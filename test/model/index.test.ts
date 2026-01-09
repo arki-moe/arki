@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { MODELS } from './index.js';
+import { MODELS } from '../../src/model/index.js';
 
 describe('MODELS', () => {
   it('should contain GPT-5.2 model', () => {

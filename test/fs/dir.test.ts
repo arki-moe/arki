@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import * as os from 'os';
-import { copyDir, dirExists, mkdir } from './dir.js';
+import { copyDir, dirExists, mkdir } from '../../src/fs/dir.js';
 
 describe('dir', () => {
   let tempDir: string;

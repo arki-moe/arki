@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { TOOLS, PROCEDURES } from '../../global.js';
-import { Procedure } from '../../procedure/Procedure.js';
+import { TOOLS, PROCEDURES } from '../../../src/global.js';
+import { Procedure } from '../../../src/procedure/Procedure.js';
 
-import './index.js';
+import '../../../src/tool/read_procedure/index.js';
 
 describe('ReadProcedureTool', () => {
   beforeEach(() => {

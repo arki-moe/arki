@@ -2,9 +2,9 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import * as os from 'os';
-import { TOOLS, workingDir, setWorkingDir } from '../../global.js';
+import { TOOLS, workingDir, setWorkingDir } from '../../../src/global.js';
 
-import './index.js';
+import '../../../src/tool/run_command/index.js';
 
 describe('RunCommandTool', () => {
   let tempDir: string;

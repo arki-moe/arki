@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { Procedure } from './Procedure.js';
+import { Procedure } from '../../src/procedure/Procedure.js';
 
 describe('Procedure', () => {
   describe('constructor', () => {

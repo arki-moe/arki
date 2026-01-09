@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import * as os from 'os';
 import * as path from 'path';
-import { OS, PATHS, workingDir, setWorkingDir } from './paths.js';
+import { OS, PATHS, workingDir, setWorkingDir } from '../../src/fs/paths.js';
 
 describe('paths', () => {
   describe('OS', () => {

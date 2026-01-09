@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
-import { Agent } from './Agent.js';
-import { MsgType, ToolCallMsg, ToolCall, Msg, AIMsg, SystemMsg, ToolResultMsg } from './Msg.js';
-import { Adapter, AdapterOptions, AdapterResponse } from '../adapter/Adapter.js';
-import { Tool } from '../tool/Tool.js';
+import { Agent } from '../../src/agent/Agent.js';
+import { MsgType, ToolCallMsg, ToolCall, Msg, AIMsg, SystemMsg, ToolResultMsg } from '../../src/agent/Msg.js';
+import { Adapter, AdapterOptions, AdapterResponse } from '../../src/adapter/Adapter.js';
+import { Tool } from '../../src/tool/Tool.js';
 
 // Create a mock adapter
 class MockAdapter extends Adapter {
