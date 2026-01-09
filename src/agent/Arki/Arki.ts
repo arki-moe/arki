@@ -6,6 +6,9 @@ import { log, isDebugMode, createColorConverter } from '../../log/index.js';
 import { HAS_MANUAL } from '../../tool/Tool.js';
 import systemPromptTemplate from './system.md';
 
+/** Maximum completion tokens for Arki agent */
+const MAX_COMPLETION_TOKENS = 4096;
+
 /** Track tool start times for elapsed calculation */
 const toolStartTimes = new Map<string, number>();
 
@@ -36,6 +39,7 @@ export function createArkiAgent(): Agent {
     adapter,
     model: config.model,
     tools: Object.values(TOOLS),
+    maxCompletionTokens: MAX_COMPLETION_TOKENS,
     platformOptions: {
       flex: config.flex,
       reasoningEffort: config.reasoningEffort,

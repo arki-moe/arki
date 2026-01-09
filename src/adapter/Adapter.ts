@@ -2,12 +2,6 @@ import { Msg } from '../agent/Msg.js';
 import { Tool } from '../tool/Tool.js';
 
 /**
- * Fixed parameters
- */
-export const TEMPERATURE = 0.2;
-export const MAX_COMPLETION_TOKENS = 4096;
-
-/**
  * Reasoning effort
  */
 export type ReasoningEffort = 'low' | 'medium' | 'high';

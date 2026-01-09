@@ -24,6 +24,8 @@ export interface AgentConfig {
   tools: Tool[];
   platformOptions?: AdapterOptions;
   messages: Msg[];
+  /** Maximum completion tokens for LLM response */
+  maxCompletionTokens?: number;
   onStream?: (chunk: string) => void;
   onToolCallMsg?: (msg: ToolCallMsg) => void;
   onBeforeToolRun?: (name: string, args: Record<string, unknown>) => void;
@@ -75,7 +77,10 @@ export class Agent {
         this.config.model,
         this.messages,
         this.config.tools,
-        this.config.platformOptions || {},
+        {
+          ...this.config.platformOptions,
+          maxCompletionTokens: this.config.maxCompletionTokens,
+        },
         this.config.onStream
       );
 

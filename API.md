@@ -225,6 +225,7 @@ abstract class Adapter {
 interface OpenAIOptions extends AdapterOptions {
   flex?: boolean;
   reasoningEffort?: ReasoningEffort;
+  maxCompletionTokens?: number;
 }
 
 // OpenAI adapter
@@ -265,6 +266,7 @@ interface AgentConfig {
   tools: Tool[];                // Tools available to agent
   platformOptions?: AdapterOptions;  // Platform-specific options (flex, reasoningEffort, etc.)
   messages: Msg[];
+  maxCompletionTokens?: number; // Maximum completion tokens for LLM response
   onStream?: (chunk: string) => void;
   onToolCallMsg?: (msg: ToolCallMsg) => void;  // Receive complete tool call message
   onBeforeToolRun?: (name: string, args: Record<string, unknown>) => void;  // Called before each tool execution

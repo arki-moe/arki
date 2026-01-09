@@ -1,12 +1,5 @@
 import OpenAI from 'openai';
-import {
-  Adapter,
-  AdapterOptions,
-  AdapterResponse,
-  ReasoningEffort,
-  TEMPERATURE,
-  MAX_COMPLETION_TOKENS,
-} from './Adapter.js';
+import { Adapter, AdapterOptions, AdapterResponse, ReasoningEffort } from './Adapter.js';
 import { Msg, MsgType, ToolCallMsg, ToolCall, AIMsg, ToolResultMsg } from '../agent/Msg.js';
 import { Tool } from '../tool/Tool.js';
 import { debug } from '../log/index.js';
@@ -19,6 +12,8 @@ export interface OpenAIOptions extends AdapterOptions {
   flex?: boolean;
   /** Reasoning effort (thinking mode) */
   reasoningEffort?: ReasoningEffort;
+  /** Maximum completion tokens for LLM response */
+  maxCompletionTokens?: number;
 }
 
 export class OpenAIAdapter extends Adapter {
@@ -102,8 +97,7 @@ export class OpenAIAdapter extends Adapter {
       model,
       messages: openaiMessages,
       tools: this.formatTools(tools),
-      temperature: TEMPERATURE,
-      max_completion_tokens: MAX_COMPLETION_TOKENS,
+      max_completion_tokens: options.maxCompletionTokens,
       stream: true,
       stream_options: { include_usage: true },
       service_tier: options.flex ? 'flex' : undefined,
