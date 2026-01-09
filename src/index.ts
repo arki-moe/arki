@@ -4,7 +4,7 @@ import * as readline from 'readline';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
-import { init, config, TOOLS, PROCEDURES, workingDir } from './global.js';
+import { init, config, TOOLS, PROCEDURES, workingDir, OS } from './global.js';
 import './tool/index.js';
 import './procedure/index.js';
 import { setDebugMode, isDebugMode, debug, log, convertColorTags } from './log/index.js';
@@ -76,6 +76,7 @@ async function main() {
   console.log();
   log(`<dim>Model: ${mainAgentConfig.model}${model ? ` (${model.name})` : ''}</dim>`);
   log(`<dim>Working directory: ${workingDir}</dim>`);
+  log(`<dim>OS: ${OS.name} (${OS.version})</dim>`);
   if (isDebugMode()) {
     log(`<yellow>Debug mode enabled</yellow>`);
   }

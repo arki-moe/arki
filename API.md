@@ -462,6 +462,24 @@ Result: `description = "📘Execute shell command in the working directory"`, `m
 
 The project uses global state management, provided through `global.ts`:
 
+#### OS Information
+
+The global `OS` object provides information about the current operating system:
+
+```typescript
+import { OS } from 'arki';
+
+// OS type definition
+interface OS_TYPE {
+  name: 'windows' | 'mac' | 'linux' | 'other';
+  version: string;
+}
+
+// Usage
+console.log(OS.name);     // 'mac', 'windows', 'linux', or 'other'
+console.log(OS.version);  // e.g., '24.5.0'
+```
+
 #### Global Tool Registry
 
 Tools are registered and accessed through the global `TOOLS` object:
