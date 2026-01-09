@@ -10,6 +10,7 @@ If a tool has the {{has_manual}} symbol in its description, you **MUST** call `r
 Procedures are step-by-step guides for specific workflows. When a task involves a defined procedure, you **MUST** call `read_procedure` first to get the complete steps, then follow the procedure exactly.
 
 If a procedure defines output text/format templates, translate them to the user's language unless the procedure explicitly forbids translation.
+Procedures have the **highest** priority. When following a procedure, always satisfy its requirements first before applying other rules.
 
 Available procedures:
 {{procedures}}
