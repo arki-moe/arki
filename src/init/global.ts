@@ -10,8 +10,19 @@ export const TOOLS: Record<string, Tool> = {};
 /** Global procedure registry */
 export const PROCEDURES: Record<string, Procedure> = {};
 
-/** Global Adapter instance */
-export let adapter: Adapter | null = null;
+/** Global adapter registry by platform */
+export const adapters: Record<string, Adapter> = {};
+
+/**
+ * Get adapter by platform name
+ */
+export function getAdapter(platform: string): Adapter {
+  const adapter = adapters[platform];
+  if (!adapter) {
+    throw new Error(`Adapter not found for platform: ${platform}`);
+  }
+  return adapter;
+}
 
 /**
  * Initialize global configuration
@@ -24,6 +35,25 @@ async function initGlobalConfig(): Promise<void> {
   await copyDir(PATHS.globalTemplate, globalConfigDir);
 }
 
+/**
+ * Initialize adapters based on available API keys
+ */
+async function initAdapters(): Promise<void> {
+  const { getApiKey } = await import('./loader.js');
+
+  // Initialize OpenAI adapter if API key is available
+  const openaiKey = getApiKey('openai');
+  if (openaiKey) {
+    adapters['openai'] = new OpenAIAdapter(openaiKey);
+  }
+
+  // Future: Add more adapters here
+  // const anthropicKey = getApiKey('anthropic');
+  // if (anthropicKey) {
+  //   adapters['anthropic'] = new AnthropicAdapter(anthropicKey);
+  // }
+}
+
 /** Initialize global state */
 export async function init(cwd?: string): Promise<void> {
   const { setWorkingDir } = await import('../fs/index.js');
@@ -34,14 +64,8 @@ export async function init(cwd?: string): Promise<void> {
   const { initProject } = await import('./project.js');
   await initProject();
 
-  const { loadConfigs, getAgentConfig, getApiKey } = await import('./loader.js');
+  const { loadConfigs } = await import('./loader.js');
   await loadConfigs();
 
-  const arkiAgentConfig = getAgentConfig('arki');
-  adapter = new OpenAIAdapter({
-    apiKey: getApiKey('openai') || '',
-    model: arkiAgentConfig.model,
-    flex: arkiAgentConfig.flex,
-    tools: Object.values(TOOLS),
-  });
+  await initAdapters();
 }

@@ -1,8 +1,7 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { Agent } from './Agent.js';
 import { MsgType, ToolCallMsg, ToolCall, Msg, AIMsg, SystemMsg, ToolResultMsg } from './Msg.js';
-import { Adapter, AdapterResponse } from '../adapter/Adapter.js';
-import { TOOLS } from '../global.js';
+import { Adapter, AdapterOptions, AdapterResponse } from '../adapter/Adapter.js';
 import { Tool } from '../tool/Tool.js';
 
 // Create a mock adapter
@@ -11,7 +10,7 @@ class MockAdapter extends Adapter {
   private currentIndex = 0;
 
   constructor() {
-    super({ apiKey: 'mock-key', model: 'mock-model' });
+    super('mock-api-key');
   }
 
   setResponses(responses: AdapterResponse[]) {
@@ -19,7 +18,13 @@ class MockAdapter extends Adapter {
     this.currentIndex = 0;
   }
 
-  async chat(_messages: Msg[], onChunk?: (chunk: string) => void): Promise<AdapterResponse> {
+  async chat(
+    _model: string,
+    _messages: Msg[],
+    _tools: Tool[],
+    _options: AdapterOptions,
+    onChunk?: (chunk: string) => void
+  ): Promise<AdapterResponse> {
     if (this.currentIndex >= this.responses.length) {
       throw new Error('No more mock responses configured');
     }
@@ -35,16 +40,9 @@ describe('Agent', () => {
   let mockAdapter: MockAdapter;
   let agent: Agent;
   let mockTool: Tool;
-  let originalTools: Record<string, Tool>;
 
   beforeEach(() => {
     mockAdapter = new MockAdapter();
-
-    // Save original TOOLS
-    originalTools = { ...TOOLS };
-
-    // Clear TOOLS and add mock tool
-    Object.keys(TOOLS).forEach((key) => delete TOOLS[key]);
 
     mockTool = {
       name: 'test_tool',
@@ -55,18 +53,15 @@ describe('Agent', () => {
       run: vi.fn().mockResolvedValue({ toolName: 'test_tool', result: 'Tool executed successfully' }),
     } as unknown as Tool;
 
-    TOOLS['test_tool'] = mockTool;
-
     agent = new Agent({
       adapter: mockAdapter,
+      model: 'test-model',
+      tools: [mockTool],
       messages: [new SystemMsg('You are a helpful assistant.')],
     });
   });
 
   afterEach(() => {
-    // Restore original TOOLS
-    Object.keys(TOOLS).forEach((key) => delete TOOLS[key]);
-    Object.assign(TOOLS, originalTools);
     vi.restoreAllMocks();
   });
 
@@ -88,6 +83,8 @@ describe('Agent', () => {
     it('should support multiple initial messages', async () => {
       const multiMsgAgent = new Agent({
         adapter: mockAdapter,
+        model: 'test-model',
+        tools: [],
         messages: [new SystemMsg('First instruction.'), new SystemMsg('Second instruction.')],
       });
 
@@ -216,6 +213,8 @@ describe('Agent', () => {
 
       const callbackAgent = new Agent({
         adapter: mockAdapter,
+        model: 'test-model',
+        tools: [mockTool],
         messages: [new SystemMsg('System')],
         onToolCallMsg,
       });
@@ -237,6 +236,8 @@ describe('Agent', () => {
 
       const callbackAgent = new Agent({
         adapter: mockAdapter,
+        model: 'test-model',
+        tools: [mockTool],
         messages: [new SystemMsg('System')],
         onToolResult,
       });
@@ -257,6 +258,8 @@ describe('Agent', () => {
 
       const callbackAgent = new Agent({
         adapter: mockAdapter,
+        model: 'test-model',
+        tools: [mockTool],
         messages: [new SystemMsg('System')],
         onBeforeToolRun,
       });
@@ -302,6 +305,8 @@ describe('Agent', () => {
 
       const streamAgent = new Agent({
         adapter: mockAdapter,
+        model: 'test-model',
+        tools: [],
         messages: [new SystemMsg('System')],
         onStream,
       });

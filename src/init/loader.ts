@@ -15,9 +15,9 @@ export type ReasoningEffort = 'low' | 'medium' | 'high';
  * Agent model configuration
  */
 export interface AgentModelConfig {
-  /** Model ID */
+  /** Model ID (provider is derived from MODELS) */
   model: string;
-  /** Use Flex API (low priority, low cost) */
+  /** Use Flex API (low priority, low cost) - OpenAI specific */
   flex?: boolean;
   /** Reasoning effort (thinking mode) */
   reasoningEffort?: ReasoningEffort;

@@ -7,6 +7,7 @@ import {
   createToolCallStreamResponse,
   createStreamResponse,
 } from '../__mocks__/openai.js';
+import { Tool } from '../tool/Tool.js';
 
 // Mock the openai module
 vi.mock('openai', () => import('../__mocks__/openai.js'));
@@ -16,33 +17,22 @@ import { OpenAIAdapter } from './openai.js';
 
 describe('OpenAIAdapter', () => {
   let adapter: OpenAIAdapter;
+  const testModel = 'gpt-5';
+  const emptyTools: Tool[] = [];
 
   beforeEach(() => {
     resetMocks();
-    adapter = new OpenAIAdapter({
-      apiKey: 'test-api-key',
-      model: 'gpt-5',
-    });
+    adapter = new OpenAIAdapter('test-api-key');
   });
 
   describe('constructor', () => {
     it('should throw error if API key is not provided', () => {
-      expect(
-        () =>
-          new OpenAIAdapter({
-            apiKey: '',
-            model: 'gpt-5',
-          })
-      ).toThrow('OpenAI API key is required');
+      expect(() => new OpenAIAdapter('')).toThrow('OpenAI API key is required');
     });
 
-    it('should create adapter with valid config', () => {
-      const adapter = new OpenAIAdapter({
-        apiKey: 'test-key',
-        model: 'gpt-5.2',
-      });
-
-      expect(adapter.getModel()).toBe('gpt-5.2');
+    it('should create adapter with valid api key', () => {
+      const adapter = new OpenAIAdapter('test-key');
+      expect(adapter).toBeInstanceOf(OpenAIAdapter);
     });
   });
 
@@ -53,7 +43,7 @@ describe('OpenAIAdapter', () => {
       const messages: [SystemMsg, UserMsg] = [new SystemMsg('You are a helpful assistant.'), new UserMsg('Hello')];
 
       const chunks: string[] = [];
-      const result = await adapter.chat(messages, (chunk) => chunks.push(chunk));
+      const result = await adapter.chat(testModel, messages, emptyTools, {}, (chunk) => chunks.push(chunk));
 
       expect(result.hasToolCalls).toBe(false);
       expect(result.message.type).toBe(MsgType.AI);
@@ -73,7 +63,7 @@ describe('OpenAIAdapter', () => {
       const messages: UserMsg[] = [new UserMsg('Read test.txt')];
       const chunks: string[] = [];
 
-      const result = await adapter.chat(messages, (chunk) => chunks.push(chunk));
+      const result = await adapter.chat(testModel, messages, emptyTools, {}, (chunk) => chunks.push(chunk));
 
       expect(result.hasToolCalls).toBe(true);
       expect(result.message.type).toBe(MsgType.ToolCall);
@@ -96,7 +86,7 @@ describe('OpenAIAdapter', () => {
 
       const messages = [new UserMsg('Read both files')];
 
-      const result = await adapter.chat(messages);
+      const result = await adapter.chat(testModel, messages, emptyTools, {});
 
       expect(result.hasToolCalls).toBe(true);
       const toolCallMsg = result.message as ToolCallMsg;
@@ -114,7 +104,7 @@ describe('OpenAIAdapter', () => {
         ToolResultMsg.single('read_file', 'File contents'),
       ];
 
-      await adapter.chat(messages);
+      await adapter.chat(testModel, messages, emptyTools, {});
 
       expect(mockChatCreate).toHaveBeenCalledTimes(1);
       const callArgs = mockChatCreate.mock.calls[0][0];
@@ -142,7 +132,7 @@ describe('OpenAIAdapter', () => {
       );
 
       const messages: UserMsg[] = [new UserMsg('Hi')];
-      const result = await adapter.chat(messages);
+      const result = await adapter.chat(testModel, messages, emptyTools, {});
 
       expect(result.usage).toEqual({
         promptTokens: 20,
@@ -152,15 +142,9 @@ describe('OpenAIAdapter', () => {
     });
 
     it('should use flex service tier when configured', async () => {
-      const flexAdapter = new OpenAIAdapter({
-        apiKey: 'test-key',
-        model: 'gpt-5',
-        flex: true,
-      });
-
       mockChatCreate.mockResolvedValue(createTextStreamResponse('Response'));
 
-      await flexAdapter.chat([new UserMsg('Hello')]);
+      await adapter.chat(testModel, [new UserMsg('Hello')], emptyTools, { flex: true });
 
       const callArgs = mockChatCreate.mock.calls[0][0];
       expect(callArgs.service_tier).toBe('flex');
@@ -178,7 +162,7 @@ describe('OpenAIAdapter', () => {
       const messages: UserMsg[] = [new UserMsg('Hi')];
       const receivedChunks: string[] = [];
 
-      await adapter.chat(messages, (chunk) => {
+      await adapter.chat(testModel, messages, emptyTools, {}, (chunk) => {
         receivedChunks.push(chunk);
       });
 
@@ -192,7 +176,7 @@ describe('OpenAIAdapter', () => {
 
       const messages = [new UserMsg('Hello')];
 
-      await expect(adapter.chat(messages)).rejects.toThrow('API Error: Rate limit exceeded');
+      await expect(adapter.chat(testModel, messages, emptyTools, {})).rejects.toThrow('API Error: Rate limit exceeded');
     });
   });
 });

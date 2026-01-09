@@ -1,6 +1,6 @@
 import { Msg, MsgType, ToolCallMsg, UserMsg, ToolResultMsg, ToolResult } from './Msg.js';
-import { Adapter } from '../adapter/Adapter.js';
-import { TOOLS } from '../init/index.js';
+import { Adapter, AdapterOptions } from '../adapter/Adapter.js';
+import { Tool } from '../tool/Tool.js';
 import { debug } from '../log/index.js';
 
 export interface AgentResponse {
@@ -18,27 +18,30 @@ export interface AgentResponse {
   };
 }
 
-export class Agent {
-  private config: {
-    adapter: Adapter;
-    messages: Msg[];
-    onStream?: (chunk: string) => void;
-    onToolCallMsg?: (msg: ToolCallMsg) => void;
-    onBeforeToolRun?: (name: string, args: Record<string, unknown>) => void;
-    onToolResult?: (name: string, args: Record<string, unknown>, result: string) => void;
-  };
-  private messages: Msg[] = [];
+export interface AgentConfig {
+  adapter: Adapter;
+  model: string;
+  tools: Tool[];
+  platformOptions?: AdapterOptions;
+  messages: Msg[];
+  onStream?: (chunk: string) => void;
+  onToolCallMsg?: (msg: ToolCallMsg) => void;
+  onBeforeToolRun?: (name: string, args: Record<string, unknown>) => void;
+  onToolResult?: (name: string, args: Record<string, unknown>, result: string) => void;
+}
 
-  constructor(config: {
-    adapter: Adapter;
-    messages: Msg[];
-    onStream?: (chunk: string) => void;
-    onToolCallMsg?: (msg: ToolCallMsg) => void;
-    onBeforeToolRun?: (name: string, args: Record<string, unknown>) => void;
-    onToolResult?: (name: string, args: Record<string, unknown>, result: string) => void;
-  }) {
+export class Agent {
+  private config: AgentConfig;
+  private messages: Msg[] = [];
+  private toolsMap: Record<string, Tool> = {};
+
+  constructor(config: AgentConfig) {
     this.config = config;
     this.messages = [...config.messages];
+    // Build tools map for quick lookup
+    for (const tool of config.tools) {
+      this.toolsMap[tool.name] = tool;
+    }
   }
 
   /**
@@ -68,7 +71,13 @@ export class Agent {
     while (true) {
       debug('Agent', `Starting conversation (message count: ${this.messages.length})`);
 
-      const response = await this.config.adapter.chat(this.messages, this.config.onStream);
+      const response = await this.config.adapter.chat(
+        this.config.model,
+        this.messages,
+        this.config.tools,
+        this.config.platformOptions || {},
+        this.config.onStream
+      );
 
       if (response.usage) {
         totalUsage.promptTokens += response.usage.promptTokens;
@@ -101,7 +110,7 @@ export class Agent {
       for (const tc of toolCalls) {
         this.config.onBeforeToolRun?.(tc.name, tc.arguments);
 
-        const tool = TOOLS[tc.name];
+        const tool = this.toolsMap[tc.name];
         const result: ToolResult = tool
           ? await tool.run(tc.arguments)
           : { toolName: tc.name, result: `Unknown tool: ${tc.name}`, isError: true };

@@ -1,19 +1,31 @@
 import OpenAI from 'openai';
-import { Adapter, AdapterResponse, TEMPERATURE, MAX_COMPLETION_TOKENS } from './Adapter.js';
+import {
+  Adapter,
+  AdapterOptions,
+  AdapterResponse,
+  ReasoningEffort,
+  TEMPERATURE,
+  MAX_COMPLETION_TOKENS,
+} from './Adapter.js';
 import { Msg, MsgType, ToolCallMsg, ToolCall, AIMsg, ToolResultMsg } from '../agent/Msg.js';
+import { Tool } from '../tool/Tool.js';
 import { debug } from '../log/index.js';
+
+/**
+ * OpenAI-specific options
+ */
+export interface OpenAIOptions extends AdapterOptions {
+  /** Use Flex API - low priority, low cost */
+  flex?: boolean;
+  /** Reasoning effort (thinking mode) */
+  reasoningEffort?: ReasoningEffort;
+}
 
 export class OpenAIAdapter extends Adapter {
   private client: OpenAI;
 
-  constructor(config: {
-    apiKey: string;
-    model: string;
-    flex?: boolean;
-    reasoningEffort?: 'low' | 'medium' | 'high';
-    tools?: import('../tool/Tool.js').Tool[];
-  }) {
-    super(config);
+  constructor(apiKey: string) {
+    super(apiKey);
     if (!this.apiKey) {
       throw new Error('OpenAI API key is required. Set OPENAI_API_KEY environment variable.');
     }
@@ -56,8 +68,9 @@ export class OpenAIAdapter extends Adapter {
     return result;
   }
 
-  private getTools() {
-    return this.tools?.map((t) => ({
+  private formatTools(tools: Tool[]) {
+    if (tools.length === 0) return undefined;
+    return tools.map((t) => ({
       type: 'function' as const,
       function: {
         name: t.name,
@@ -71,8 +84,14 @@ export class OpenAIAdapter extends Adapter {
     }));
   }
 
-  async chat(messages: Msg[], onChunk?: (chunk: string) => void): Promise<AdapterResponse> {
-    debug('API', `Requesting OpenAI (model: ${this.model}, messages: ${messages.length})`);
+  async chat(
+    model: string,
+    messages: Msg[],
+    tools: Tool[],
+    options: OpenAIOptions,
+    onChunk?: (chunk: string) => void
+  ): Promise<AdapterResponse> {
+    debug('API', `Requesting OpenAI (model: ${model}, messages: ${messages.length})`);
 
     const openaiMessages = this.toOpenAIMessages(messages);
 
@@ -80,15 +99,15 @@ export class OpenAIAdapter extends Adapter {
     const requestParams: OpenAI.Chat.Completions.ChatCompletionCreateParamsStreaming & {
       reasoning_effort?: string;
     } = {
-      model: this.model,
+      model,
       messages: openaiMessages,
-      tools: this.getTools(),
+      tools: this.formatTools(tools),
       temperature: TEMPERATURE,
       max_completion_tokens: MAX_COMPLETION_TOKENS,
       stream: true,
       stream_options: { include_usage: true },
-      service_tier: this.flex ? 'flex' : undefined,
-      reasoning_effort: this.reasoningEffort,
+      service_tier: options.flex ? 'flex' : undefined,
+      reasoning_effort: options.reasoningEffort,
     };
     const stream = await this.client.chat.completions.create(requestParams);
 

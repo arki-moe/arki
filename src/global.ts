@@ -2,7 +2,7 @@
 export { OS, PATHS, workingDir, setWorkingDir, type OS_TYPE } from './fs/index.js';
 
 // Re-export from init/global module
-export { TOOLS, PROCEDURES, adapter, init } from './init/global.js';
+export { TOOLS, PROCEDURES, adapters, getAdapter, init } from './init/global.js';
 
 // Re-export config utilities
 export {

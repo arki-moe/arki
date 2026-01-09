@@ -1,5 +1,7 @@
 import { Agent, SystemMsg } from '../index.js';
-import { adapter, workingDir, PROCEDURES } from '../../global.js';
+import { getAdapter, workingDir, PROCEDURES, TOOLS } from '../../global.js';
+import { getAgentConfig } from '../../init/index.js';
+import { MODELS } from '../../model/index.js';
 import { log, isDebugMode, createColorConverter } from '../../log/index.js';
 import { HAS_MANUAL } from '../../tool/Tool.js';
 import systemPromptTemplate from './system.md';
@@ -11,9 +13,12 @@ const toolStartTimes = new Map<string, number>();
  * Create arki agent
  */
 export function createArkiAgent(): Agent {
-  if (!adapter) {
-    throw new Error('Adapter not initialized, please call init() first');
+  const config = getAgentConfig('arki');
+  const model = MODELS[config.model];
+  if (!model) {
+    throw new Error(`Unknown model: ${config.model}`);
   }
+  const adapter = getAdapter(model.provider);
 
   // Generate procedures list
   const proceduresList = Object.values(PROCEDURES)
@@ -29,6 +34,12 @@ export function createArkiAgent(): Agent {
   const convertColor = createColorConverter();
   const agent = new Agent({
     adapter,
+    model: config.model,
+    tools: Object.values(TOOLS),
+    platformOptions: {
+      flex: config.flex,
+      reasoningEffort: config.reasoningEffort,
+    },
     messages: [new SystemMsg(systemInstruction)],
     onStream: (chunk) => {
       process.stdout.write(convertColor(chunk));
@@ -65,4 +76,3 @@ export function createArkiAgent(): Agent {
 
   return agent;
 }
-

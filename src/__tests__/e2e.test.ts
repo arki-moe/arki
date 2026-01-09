@@ -21,6 +21,7 @@ import '../tool/index.js';
  */
 
 const hasApiKey = !!process.env.OPENAI_API_KEY;
+const testModel = 'gpt-4o-mini';
 
 describe.skipIf(!hasApiKey)('E2E Tests', () => {
   let tempDir: string;
@@ -51,17 +52,14 @@ describe.skipIf(!hasApiKey)('E2E Tests', () => {
 
   describe('OpenAI Adapter', () => {
     it('should get response from OpenAI API', async () => {
-      const adapter = new OpenAIAdapter({
-        apiKey: process.env.OPENAI_API_KEY!,
-        model: 'gpt-4o-mini',
-      });
+      const adapter = new OpenAIAdapter(process.env.OPENAI_API_KEY!);
 
       const messages: [SystemMsg, UserMsg] = [
         new SystemMsg('You are a helpful assistant. Keep responses very brief.'),
         new UserMsg('What is 2 + 2? Reply with just the number.'),
       ];
 
-      const result = await adapter.chat(messages);
+      const result = await adapter.chat(testModel, messages, [], {});
 
       expect(result.message.type).toBe(MsgType.AI);
       expect(result.hasToolCalls).toBe(false);
@@ -73,10 +71,7 @@ describe.skipIf(!hasApiKey)('E2E Tests', () => {
     }, 30000);
 
     it('should handle streaming response', async () => {
-      const adapter = new OpenAIAdapter({
-        apiKey: process.env.OPENAI_API_KEY!,
-        model: 'gpt-4o-mini',
-      });
+      const adapter = new OpenAIAdapter(process.env.OPENAI_API_KEY!);
 
       const messages: [SystemMsg, UserMsg] = [
         new SystemMsg('Be brief.'),
@@ -84,7 +79,7 @@ describe.skipIf(!hasApiKey)('E2E Tests', () => {
       ];
 
       const chunks: string[] = [];
-      const result = await adapter.chat(messages, (chunk) => {
+      const result = await adapter.chat(testModel, messages, [], {}, (chunk) => {
         chunks.push(chunk);
       });
 
@@ -103,16 +98,14 @@ describe.skipIf(!hasApiKey)('E2E Tests', () => {
       // Get tools from TOOLS
       const tools = Object.values(TOOLS);
 
-      // Create adapter with tools
-      const adapter = new OpenAIAdapter({
-        apiKey: process.env.OPENAI_API_KEY!,
-        model: 'gpt-4o-mini',
-        tools,
-      });
+      // Create adapter
+      const adapter = new OpenAIAdapter(process.env.OPENAI_API_KEY!);
 
       // Create an agent that can use tools
       const agent = new Agent({
         adapter,
+        model: testModel,
+        tools,
         messages: [
           new SystemMsg(`You are a helpful assistant that can read files.
 The working directory is ${tempDir}.

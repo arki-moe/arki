@@ -13,6 +13,13 @@ export const MAX_COMPLETION_TOKENS = 4096;
 export type ReasoningEffort = 'low' | 'medium' | 'high';
 
 /**
+ * Platform-specific options for adapter
+ */
+export interface AdapterOptions {
+  [key: string]: unknown;
+}
+
+/**
  * LLM response result
  */
 export interface AdapterResponse {
@@ -28,41 +35,20 @@ export interface AdapterResponse {
 
 /**
  * LLM adapter base class
+ * Only contains platform authentication, model/tools belong to Agent
  */
 export abstract class Adapter {
   protected apiKey: string;
-  protected model: string;
-  /** Use Flex API (OpenAI) - low priority, low cost */
-  protected flex?: boolean;
-  /** Reasoning effort (thinking mode) */
-  protected reasoningEffort?: ReasoningEffort;
-  /** Available tools list */
-  protected tools?: Tool[];
 
-  constructor(config: {
-    apiKey: string;
-    model: string;
-    /** Use Flex API (OpenAI) - low priority, low cost */
-    flex?: boolean;
-    /** Reasoning effort (thinking mode) */
-    reasoningEffort?: ReasoningEffort;
-    /** Available tools list */
-    tools?: Tool[];
-  }) {
-    this.apiKey = config.apiKey;
-    this.model = config.model;
-    this.flex = config.flex;
-    this.reasoningEffort = config.reasoningEffort;
-    this.tools = config.tools;
+  constructor(apiKey: string) {
+    this.apiKey = apiKey;
   }
 
   abstract chat(
+    model: string,
     messages: Msg[],
+    tools: Tool[],
+    options: AdapterOptions,
     onChunk?: (chunk: string) => void
   ): Promise<AdapterResponse>;
-
-  getModel(): string {
-    return this.model;
-  }
 }
-

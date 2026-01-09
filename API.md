@@ -30,7 +30,7 @@ arki/
 │   │   └── models.ts     # Model configuration data (MODELS)
 │   ├── init/
 │   │   ├── index.ts      # Initialization entry and re-exports
-│   │   ├── global.ts     # Global state (TOOLS, PROCEDURES, adapter) and init function
+│   │   ├── global.ts     # Global state (TOOLS, PROCEDURES, adapters registry) and init function
 │   │   ├── project.ts    # Project config initialization (trust prompt, copy template)
 │   │   └── loader.ts     # Config loading and merging
 │   ├── fs/
@@ -189,6 +189,11 @@ const toolResults = new ToolResultMsg(results);
 // Reasoning effort type
 type ReasoningEffort = 'low' | 'medium' | 'high';
 
+// Platform-specific options
+interface AdapterOptions {
+  [key: string]: unknown;
+}
+
 // Adapter response result
 interface AdapterResponse {
   message: Msg;
@@ -201,39 +206,38 @@ interface AdapterResponse {
   };
 }
 
-// Adapter base class
+// Adapter base class (only contains platform authentication)
 abstract class Adapter {
   protected apiKey: string;
-  protected model: string;
-  protected flex?: boolean;
-  protected reasoningEffort?: ReasoningEffort;
-  protected tools?: Tool[];
 
-  constructor(config: {
-    apiKey: string;
-    model: string;
-    flex?: boolean;
-    reasoningEffort?: ReasoningEffort;
-    tools?: Tool[];
-  });
+  constructor(apiKey: string);
 
   abstract chat(
+    model: string,
     messages: Msg[],
+    tools: Tool[],
+    options: AdapterOptions,
     onChunk?: (chunk: string) => void
   ): Promise<AdapterResponse>;
+}
 
-  getModel(): string;
+// OpenAI-specific options
+interface OpenAIOptions extends AdapterOptions {
+  flex?: boolean;
+  reasoningEffort?: ReasoningEffort;
 }
 
 // OpenAI adapter
 class OpenAIAdapter extends Adapter {
-  constructor(config: {
-    apiKey: string;
-    model: string;
-    flex?: boolean;
-    reasoningEffort?: ReasoningEffort;
-    tools?: Tool[];
-  });
+  constructor(apiKey: string);
+
+  async chat(
+    model: string,
+    messages: Msg[],
+    tools: Tool[],
+    options: OpenAIOptions,
+    onChunk?: (chunk: string) => void
+  ): Promise<AdapterResponse>;
 }
 ```
 
@@ -255,15 +259,20 @@ interface AgentResponse {
   };
 }
 
+interface AgentConfig {
+  adapter: Adapter;
+  model: string;                // Model ID (provider derived from MODELS)
+  tools: Tool[];                // Tools available to agent
+  platformOptions?: AdapterOptions;  // Platform-specific options (flex, reasoningEffort, etc.)
+  messages: Msg[];
+  onStream?: (chunk: string) => void;
+  onToolCallMsg?: (msg: ToolCallMsg) => void;  // Receive complete tool call message
+  onBeforeToolRun?: (name: string, args: Record<string, unknown>) => void;  // Called before each tool execution
+  onToolResult?: (name: string, args: Record<string, unknown>, result: string) => void;  // Called after each tool execution
+}
+
 class Agent {
-  constructor(config: {
-    adapter: Adapter;
-    messages: Msg[];
-    onStream?: (chunk: string) => void;
-    onToolCallMsg?: (msg: ToolCallMsg) => void;  // Receive complete tool call message
-    onBeforeToolRun?: (name: string, args: Record<string, unknown>) => void;  // Called before each tool execution
-    onToolResult?: (name: string, args: Record<string, unknown>, result: string) => void;  // Called after each tool execution
-  });
+  constructor(config: AgentConfig);
 
   static renderTemplate(template: string, variables: Record<string, string | number | boolean>): string;
   async run(userInput: string): Promise<AgentResponse>;
@@ -283,12 +292,19 @@ const systemInstruction = Agent.renderTemplate(systemTemplate, {
   current_time: new Date().toLocaleString(),
 });
 
-// Method 1: Use global adapter (recommended, initialized via init())
-import { adapter, init } from 'arki';
+// Method 1: Use global adapters registry (recommended, initialized via init())
+import { getAdapter, getAgentConfig, init, TOOLS, MODELS } from 'arki';
 
 await init();
+const config = getAgentConfig('arki');
+const model = MODELS[config.model];
+const adapter = getAdapter(model.provider);
+
 const agent = new Agent({
-  adapter: adapter!,
+  adapter,
+  model: config.model,
+  tools: Object.values(TOOLS),
+  platformOptions: { flex: config.flex, reasoningEffort: config.reasoningEffort },
   messages: [new SystemMsg(systemInstruction)],
   onStream: (chunk) => process.stdout.write(chunk),
   onToolCallMsg: (msg) => {
@@ -305,15 +321,13 @@ const agent = new Agent({
 // Method 2: Manually create adapter
 import { OpenAIAdapter, TOOLS } from 'arki';
 
-const openaiAdapter = new OpenAIAdapter({
-  apiKey: process.env.OPENAI_API_KEY || '',
-  model: 'gpt-5.1',
-  flex: false,
-  tools: Object.values(TOOLS),
-});
+const openaiAdapter = new OpenAIAdapter(process.env.OPENAI_API_KEY || '');
 
 const agent = new Agent({
   adapter: openaiAdapter,
+  model: 'gpt-5.1',
+  tools: Object.values(TOOLS),
+  platformOptions: { flex: false },
   messages: [new SystemMsg(systemInstruction)],
   onStream: (chunk) => process.stdout.write(chunk),
   onBeforeToolRun: (name, args) => {
@@ -533,23 +547,24 @@ const result = await tool.run({ path: 'test.txt' });
 const allTools = Object.values(TOOLS);
 ```
 
-#### Global Adapter
+#### Global Adapters Registry
 
-Adapter instance is a global singleton, automatically initialized at `init()`:
+Adapters are stored in a global registry by platform name, automatically initialized at `init()`:
 
 ```typescript
-import { adapter, init } from 'arki';
+import { adapters, getAdapter, init } from 'arki';
 
-// Initialize global state (including adapter and tool registration)
+// Initialize global state (including adapters based on available API keys)
 await init();
 
-// adapter is initialized, can be used directly
-if (adapter) {
-  console.log(`Currently using model: ${adapter.getModel()}`);
-}
+// Get adapter by platform name
+const openaiAdapter = getAdapter('openai');
+
+// Or access the registry directly
+console.log('Available adapters:', Object.keys(adapters));
 ```
 
-The global adapter uses settings from the arki agent configuration (`config.agents.arki`), including all registered tools. This avoids duplicate adapter instance creation.
+Adapters are only initialized for platforms that have API keys configured in environment variables. The `getAdapter()` function throws if the requested platform's adapter is not available.
 
 #### Initialization Flow
 
