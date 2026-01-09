@@ -1,6 +1,14 @@
 import { defineConfig } from 'tsup';
-import { copyFileSync, mkdirSync } from 'fs';
-import { dirname, join } from 'path';
+import { cpSync, mkdirSync } from 'fs';
+import { join } from 'path';
+
+/**
+ * Copy directory recursively
+ */
+function copyDir(src: string, dest: string): void {
+  mkdirSync(dest, { recursive: true });
+  cpSync(src, dest, { recursive: true });
+}
 
 export default defineConfig({
   entry: ['src/index.ts'],
@@ -27,11 +35,15 @@ export default defineConfig({
     },
   ],
   onSuccess: async () => {
-    // Copy config.json to dist/config/config.json
-    const configSrc = join(process.cwd(), 'src/config/config.json');
-    const configDest = join(process.cwd(), 'dist/config/config.json');
-    mkdirSync(dirname(configDest), { recursive: true });
-    copyFileSync(configSrc, configDest);
+    // Copy config templates to dist/config/
+    copyDir(
+      join(process.cwd(), 'src/config/arki'),
+      join(process.cwd(), 'dist/config/arki')
+    );
+    copyDir(
+      join(process.cwd(), 'src/config/.arki'),
+      join(process.cwd(), 'dist/config/.arki')
+    );
   },
 });
 

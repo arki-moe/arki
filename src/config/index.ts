@@ -1,6 +1,14 @@
+// Config module - templates only
+// All config logic has been moved to src/init/
+
+// Re-export types and functions from init module for backward compatibility
 export {
-  config,
+  getConfig,
+  getApiKey,
+  getAgentConfig,
+  saveConfig,
+  type GlobalConfig,
   type AgentType,
   type AgentModelConfig,
-  type GlobalConfig,
-} from './config.js';
+  type ReasoningEffort,
+} from '../init/index.js';
