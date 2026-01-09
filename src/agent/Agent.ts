@@ -1,6 +1,6 @@
 import { Msg, MsgType, ToolCallMsg, UserMsg, ToolResultMsg, ToolResult } from './Msg.js';
 import { Adapter } from '../adapter/Adapter.js';
-import { TOOLS } from '../global.js';
+import { TOOLS } from '../init/index.js';
 import { debug } from '../log/index.js';
 
 export interface AgentResponse {

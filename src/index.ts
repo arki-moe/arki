@@ -4,7 +4,7 @@ import * as readline from 'readline';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
-import { init, config, TOOLS, PROCEDURES, workingDir, OS } from './global.js';
+import { init, getAgentConfig, TOOLS, PROCEDURES, workingDir, OS } from './global.js';
 import './tool/index.js';
 import './procedure/index.js';
 import { setDebugMode, isDebugMode, debug, log, convertColorTags } from './log/index.js';
@@ -68,7 +68,7 @@ async function main() {
   
   await init(targetDir);
 
-  const mainAgentConfig = config.getAgentConfig('main');
+  const mainAgentConfig = getAgentConfig('main');
   const model = MODELS[mainAgentConfig.model];
 
   console.log();
