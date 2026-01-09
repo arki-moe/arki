@@ -1,5 +1,5 @@
 // Re-export init function from global
-export { init, TOOLS, PROCEDURES, adapter, initAdapter } from './global.js';
+export { init, TOOLS, PROCEDURES, adapter } from './global.js';
 
 // Re-export config utilities
 export {

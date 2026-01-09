@@ -18,33 +18,10 @@ export let adapter: Adapter | null = null;
  * - Checks if global config directory exists
  * - If not, copies the template from package
  */
-export async function initGlobalConfig(): Promise<void> {
+async function initGlobalConfig(): Promise<void> {
   const globalConfigDir = PATHS.globalConfig;
-
-  if (await dirExists(globalConfigDir)) {
-    return;
-  }
-
-  // Copy global config template to user's config directory
+  if (await dirExists(globalConfigDir)) return;
   await copyDir(PATHS.globalTemplate, globalConfigDir);
-}
-
-/** Initialize global Adapter */
-export function initAdapter(): void {
-  if (adapter) {
-    return;
-  }
-
-  // Import dynamically to avoid circular dependency
-  import('./index.js').then(({ getAgentConfig, getApiKey }) => {
-    const mainAgentConfig = getAgentConfig('main');
-    adapter = new OpenAIAdapter({
-      apiKey: getApiKey('openai') || '',
-      model: mainAgentConfig.model,
-      flex: mainAgentConfig.flex,
-      tools: Object.values(TOOLS),
-    });
-  });
 }
 
 /** Initialize global state */
@@ -60,7 +37,6 @@ export async function init(cwd?: string): Promise<void> {
   const { loadConfigs, getAgentConfig, getApiKey } = await import('./loader.js');
   await loadConfigs();
 
-  // Initialize adapter after config is loaded
   const mainAgentConfig = getAgentConfig('main');
   adapter = new OpenAIAdapter({
     apiKey: getApiKey('openai') || '',
