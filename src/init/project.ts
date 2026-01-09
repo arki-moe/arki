@@ -26,16 +26,20 @@ async function askQuestion(question: string): Promise<boolean> {
  * - If not, asks user if they trust the project
  * - If trusted, copies the template to project
  */
-export async function initProject(): Promise<void> {
+export async function initProject(forceInit?: boolean): Promise<void> {
   const projectConfigDir = PATHS.projectConfig;
 
   if (await dirExists(projectConfigDir)) {
     return;
   }
 
-  // Ask user if they trust this project
-  print(`\n<dim>Project directory: ${workingDir}</dim>`);
-  const trusted = await askQuestion('Do you trust this project and want to initialize arki config?');
+  const trusted = forceInit
+    ? true
+    : await (async () => {
+        // Ask user if they trust this project
+        print(`\n<dim>Project directory: ${workingDir}</dim>`);
+        return askQuestion('Do you trust this project and want to initialize arki config?');
+      })();
 
   if (!trusted) {
     print('<yellow>Initialization cancelled.</yellow>');

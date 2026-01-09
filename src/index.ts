@@ -32,6 +32,7 @@ function parseArgs() {
   const args = process.argv.slice(2);
   let targetDir = process.cwd();
   let enableDebug = false;
+  let forceInit = false;
 
   for (let i = 0; i < args.length; i++) {
     if (args[i] === '-p' && args[i + 1]) {
@@ -41,6 +42,8 @@ function parseArgs() {
       enableDebug = true;
     } else if (args[i] === '--reset') {
       resetConfig();
+    } else if (args[i] === '--init') {
+      forceInit = true;
     } else if (args[i] === '--help' || args[i] === '-h') {
       console.log(`
 Usage: arki [options]
@@ -48,6 +51,7 @@ Usage: arki [options]
 Options:
   -p <path>      Specify working directory
   --debug, -d    Enable debug mode, show detailed logs
+  --init         Initialize project config without prompting
   --reset        Reset configuration to factory defaults
   --help, -h     Show help information
 `);
@@ -55,18 +59,18 @@ Options:
     }
   }
 
-  return { targetDir, enableDebug };
+  return { targetDir, enableDebug, forceInit };
 }
 
 async function main() {
-  const { targetDir, enableDebug } = parseArgs();
+  const { targetDir, enableDebug, forceInit } = parseArgs();
   
   if (enableDebug) {
     setDebugMode(true);
     debug('Init', 'Debug mode enabled');
   }
   
-  await init(targetDir);
+  await init(targetDir, forceInit);
 
   const arkiAgentConfig = getAgentConfig('arki');
   const model = MODELS[arkiAgentConfig.model];
