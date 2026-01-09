@@ -1,6 +1,6 @@
 {
   "agents": {
-    "main": {
+    "arki": {
       "model": "gpt-5.1",
       "flex": true,
       "reasoningEffort": "medium"

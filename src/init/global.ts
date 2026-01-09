@@ -37,11 +37,11 @@ export async function init(cwd?: string): Promise<void> {
   const { loadConfigs, getAgentConfig, getApiKey } = await import('./loader.js');
   await loadConfigs();
 
-  const mainAgentConfig = getAgentConfig('main');
+  const arkiAgentConfig = getAgentConfig('arki');
   adapter = new OpenAIAdapter({
     apiKey: getApiKey('openai') || '',
-    model: mainAgentConfig.model,
-    flex: mainAgentConfig.flex,
+    model: arkiAgentConfig.model,
+    flex: arkiAgentConfig.flex,
     tools: Object.values(TOOLS),
   });
 }

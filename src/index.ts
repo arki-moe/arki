@@ -9,7 +9,7 @@ import './tool/index.js';
 import './procedure/index.js';
 import { setDebugMode, isDebugMode, debug, log, convertColorTags } from './log/index.js';
 import { MODELS } from './model/index.js';
-import { createMainAgent } from './agent/Arki/index.js';
+import { createArkiAgent } from './agent/Arki/index.js';
 import packageJson from '../package.json' with { type: 'json' };
 
 function getConfigPath(): string {
@@ -68,13 +68,13 @@ async function main() {
   
   await init(targetDir);
 
-  const mainAgentConfig = getAgentConfig('main');
-  const model = MODELS[mainAgentConfig.model];
+  const arkiAgentConfig = getAgentConfig('arki');
+  const model = MODELS[arkiAgentConfig.model];
 
   console.log();
   log(`<cyan>Arki AI Agent v${packageJson.version}</cyan>`);
   console.log();
-  log(`<dim>Model: ${mainAgentConfig.model}${model ? ` (${model.name})` : ''}</dim>`);
+  log(`<dim>Model: ${arkiAgentConfig.model}${model ? ` (${model.name})` : ''}</dim>`);
   log(`<dim>Working directory: ${workingDir}</dim>`);
   log(`<dim>OS: ${OS.name} (${OS.version})</dim>`);
   if (isDebugMode()) {
@@ -84,11 +84,11 @@ async function main() {
   log(`<dim>Loaded ${Object.keys(TOOLS).length} tools</dim>`);
   if (isDebugMode()) {
     debug('Init', 'Loaded tools', Object.keys(TOOLS));
-    debug('Init', 'Agent config', mainAgentConfig);
+    debug('Init', 'Agent config', arkiAgentConfig);
   }
   console.log();
 
-  const agent = createMainAgent();
+  const agent = createArkiAgent();
 
   const rl = readline.createInterface({
     input: process.stdin,

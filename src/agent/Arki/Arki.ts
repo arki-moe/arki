@@ -8,9 +8,9 @@ import systemPromptTemplate from './system.md';
 const toolStartTimes = new Map<string, number>();
 
 /**
- * Create main agent
+ * Create arki agent
  */
-export function createMainAgent(): Agent {
+export function createArkiAgent(): Agent {
   if (!adapter) {
     throw new Error('Adapter not initialized, please call init() first');
   }

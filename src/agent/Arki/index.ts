@@ -1,2 +1,2 @@
-export { createMainAgent } from './Arki.js';
+export { createArkiAgent } from './Arki.js';
 

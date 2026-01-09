@@ -4,7 +4,7 @@ import { PATHS, readJsonFile, writeJsonFile } from '../fs/index.js';
 /**
  * Agent type
  */
-export type AgentType = 'main' | 'coder';
+export type AgentType = 'arki' | 'coder';
 
 /**
  * Reasoning effort

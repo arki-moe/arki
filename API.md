@@ -19,7 +19,7 @@ arki/
 │   │   ├── Msg.ts        # Message type definitions and constructors
 │   │   └── Arki/
 │   │       ├── index.ts  # Arki agent creation logic
-│   │       ├── Arki.ts   # createMainAgent implementation
+│   │       ├── Arki.ts   # createArkiAgent implementation
 │   │       └── system.md # Arki agent system prompt
 │   ├── adapter/
 │   │   ├── Adapter.ts    # LLM adapter base class
@@ -549,7 +549,7 @@ if (adapter) {
 }
 ```
 
-The global adapter uses settings from the main configuration (`config.agents.main`), including all registered tools. This avoids duplicate adapter instance creation.
+The global adapter uses settings from the arki agent configuration (`config.agents.arki`), including all registered tools. This avoids duplicate adapter instance creation.
 
 #### Initialization Flow
 
@@ -582,7 +582,7 @@ import { getConfig, getApiKey, getAgentConfig } from 'arki';
 
 const config = getConfig();
 const apiKey = getApiKey('openai');
-const mainConfig = getAgentConfig('main');
+const arkiConfig = getAgentConfig('arki');
 ```
 
 Tool definitions are passed to the API directly (name, description, parameters). Tools with detailed manual content will have the `📘` symbol prefix in their description.
