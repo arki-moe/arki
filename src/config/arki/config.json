@@ -1,11 +1,11 @@
 {
   "agents": {
-    "arki": {
+    "Arki": {
       "model": "gpt-5.1",
       "flex": true,
       "reasoningEffort": "medium"
     },
-    "coder": {
+    "Coder": {
       "model": "gpt-5.2",
       "flex": true,
       "reasoningEffort": "high"

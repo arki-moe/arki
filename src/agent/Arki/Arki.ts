@@ -16,7 +16,7 @@ const toolStartTimes = new Map<string, number>();
  * Create arki agent
  */
 export function createArkiAgent(): Agent {
-  const config = getAgentConfig('arki');
+  const config = getAgentConfig('Arki');
   const model = MODELS[config.model];
   if (!model) {
     throw new Error(`Unknown model: ${config.model}`);
@@ -34,8 +34,10 @@ export function createArkiAgent(): Agent {
     procedures: proceduresList || '(none)',
   });
 
+  const agentName = 'Arki';
   const convertColor = createColorConverter();
   const agent = new Agent({
+    name: agentName,
     adapter,
     model: config.model,
     tools: Object.values(TOOLS),
@@ -48,18 +50,18 @@ export function createArkiAgent(): Agent {
     onStream: (chunk) => {
       process.stdout.write(convertColor(chunk));
     },
-    onBeforeToolRun: (name) => {
-      toolStartTimes.set(name, Date.now());
+    onBeforeToolRun: (toolName) => {
+      toolStartTimes.set(toolName, Date.now());
     },
-    onToolResult: (name, args, result) => {
-      const startTime = toolStartTimes.get(name) || Date.now();
+    onToolResult: (toolName, args, result) => {
+      const startTime = toolStartTimes.get(toolName) || Date.now();
       const elapsed = Date.now() - startTime;
-      toolStartTimes.delete(name);
+      toolStartTimes.delete(toolName);
 
       const argsStr = JSON.stringify(args);
       const argsPreview = argsStr.length > 60 ? argsStr.substring(0, 60) + '...' : argsStr;
 
-      let output = `<green>[TOOL]</green> ${name} <dim>${argsPreview} (${elapsed}ms)`;
+      let output = `<cyan>[${agentName}]</cyan><green>[${toolName}]</green> <dim>${argsPreview} (${elapsed}ms)`;
       if (isDebugMode()) {
         const lines = result.split('\n').filter((l) => l.trim());
         let summary: string;

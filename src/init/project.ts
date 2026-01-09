@@ -1,10 +1,11 @@
 import * as path from 'path';
 import * as readline from 'readline';
 import { PATHS, workingDir, copyDir, dirExists, writeJsonFile } from '../fs/index.js';
-import { print } from '../log/index.js';
+import { print, convertColorTags } from '../log/index.js';
 
 /**
  * Ask user a yes/no question via stdin
+ * Supports XML-style color tags in the question
  */
 async function askQuestion(question: string): Promise<boolean> {
   const rl = readline.createInterface({
@@ -13,7 +14,7 @@ async function askQuestion(question: string): Promise<boolean> {
   });
 
   return new Promise((resolve) => {
-    rl.question(`${question} (y/n): `, (answer) => {
+    rl.question(convertColorTags(`${question} <dim>(y/n):</dim> `), (answer) => {
       rl.close();
       resolve(answer.toLowerCase() === 'y' || answer.toLowerCase() === 'yes');
     });
@@ -38,7 +39,7 @@ export async function initProject(forceInit?: boolean): Promise<void> {
     : await (async () => {
         // Ask user if they trust this project
         print(`\n<dim>Project directory: ${workingDir}</dim>`);
-        return askQuestion('Do you trust this project and want to initialize arki config?');
+        return askQuestion('<red><bold>Do you trust this project and want to initialize Arki config?</bold></red>');
       })();
 
   if (!trusted) {

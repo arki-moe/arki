@@ -7,7 +7,7 @@ import * as os from 'os';
 import { init, getAgentConfig, TOOLS, PROCEDURES, workingDir, OS } from './global.js';
 import './tool/index.js';
 import './procedure/index.js';
-import { setDebugMode, isDebugMode, debug, log, convertColorTags } from './log/index.js';
+import { setDebugMode, isDebugMode, debug, log, print, formatNumber, convertColorTags, getTimestamp } from './log/index.js';
 import { MODELS } from './model/index.js';
 import { createArkiAgent } from './agent/Arki/index.js';
 import packageJson from '../package.json' with { type: 'json' };
@@ -72,7 +72,7 @@ async function main() {
   
   await init(targetDir, forceInit);
 
-  const arkiAgentConfig = getAgentConfig('arki');
+  const arkiAgentConfig = getAgentConfig('Arki');
   const model = MODELS[arkiAgentConfig.model];
 
   console.log();
@@ -144,16 +144,15 @@ async function main() {
 
       console.log();
       try {
+        print(`<gray>[${getTimestamp()}]</gray> <cyan>[${agent.name}]</cyan> `, false);
         const result = await agent.run(trimmed);
 
-        console.log();
-
         if (result.usage) {
-          const contextLimit = model?.capabilities.contextWindow || 'N/A';
-          log(`<dim>[Tokens: ${result.usage.totalTokens} (prompt: ${result.usage.promptTokens}, cached: ${result.usage.cachedTokens || 0}, limit: ${contextLimit})]</dim>`);
+          const contextLimit = model?.capabilities.contextWindow || 0;
+          const tokensInfo = `[Tokens: ${formatNumber(result.usage.totalTokens)} (cached: ${formatNumber(result.usage.cachedTokens || 0)}) / ${formatNumber(contextLimit)}]`;
+          print(`<dim>${tokensInfo}</dim>`);
         }
 
-        console.log();
       } catch (error) {
         log(`<red>Error: ${error instanceof Error ? error.message : String(error)}</red>`);
         console.log();

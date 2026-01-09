@@ -19,6 +19,8 @@ export interface AgentResponse {
 }
 
 export interface AgentConfig {
+  /** Agent name for display */
+  name: string;
   adapter: Adapter;
   model: string;
   tools: Tool[];
@@ -44,6 +46,11 @@ export class Agent {
     for (const tool of config.tools) {
       this.toolsMap[tool.name] = tool;
     }
+  }
+
+  /** Get agent name */
+  get name(): string {
+    return this.config.name;
   }
 
   /**

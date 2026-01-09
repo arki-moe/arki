@@ -68,4 +68,4 @@ export function createColorConverter() {
 
 export { debug, isDebugMode, setDebugMode } from './debug.js';
 
-export { log, print, info, success, warn, error } from './log.js';
+export { log, print, info, success, warn, error, getTimestamp, formatNumber } from './log.js';
