@@ -24,15 +24,9 @@ export interface AgentModelConfig {
 }
 
 /**
- * Global configuration
+ * Global configuration (from config files)
  */
 export interface GlobalConfig {
-  apiKeys?: {
-    openai?: string;
-    anthropic?: string;
-    google?: string;
-    [key: string]: string | undefined;
-  };
   agents: {
     [K in AgentType]?: AgentModelConfig;
   };
@@ -42,18 +36,13 @@ export interface GlobalConfig {
 let mergedConfig: GlobalConfig | null = null;
 
 /**
- * Deep merge two objects
+ * Deep merge two config objects
  */
 function deepMerge(base: GlobalConfig, override: Partial<GlobalConfig>): GlobalConfig {
   const result: GlobalConfig = {
     ...base,
     agents: { ...base.agents },
   };
-
-  // Merge apiKeys
-  if (override.apiKeys) {
-    result.apiKeys = { ...base.apiKeys, ...override.apiKeys };
-  }
 
   // Merge agents
   if (override.agents) {
@@ -66,30 +55,6 @@ function deepMerge(base: GlobalConfig, override: Partial<GlobalConfig>): GlobalC
   }
 
   return result;
-}
-
-/**
- * Load environment API keys
- */
-function loadEnvApiKeys(config: GlobalConfig): void {
-  if (process.env.OPENAI_API_KEY) {
-    if (!config.apiKeys) config.apiKeys = {};
-    if (!config.apiKeys.openai) {
-      config.apiKeys.openai = process.env.OPENAI_API_KEY;
-    }
-  }
-  if (process.env.ANTHROPIC_API_KEY) {
-    if (!config.apiKeys) config.apiKeys = {};
-    if (!config.apiKeys.anthropic) {
-      config.apiKeys.anthropic = process.env.ANTHROPIC_API_KEY;
-    }
-  }
-  if (process.env.GOOGLE_API_KEY) {
-    if (!config.apiKeys) config.apiKeys = {};
-    if (!config.apiKeys.google) {
-      config.apiKeys.google = process.env.GOOGLE_API_KEY;
-    }
-  }
 }
 
 /**
@@ -122,9 +87,6 @@ export async function loadConfigs(): Promise<GlobalConfig> {
     mergedConfig = globalConfig;
   }
 
-  // Load API keys from environment
-  loadEnvApiKeys(mergedConfig);
-
   return mergedConfig;
 }
 
@@ -139,10 +101,16 @@ export function getConfig(): GlobalConfig {
 }
 
 /**
- * Get API key for a provider
+ * Get API key from environment variable
  */
 export function getApiKey(provider: string): string | undefined {
-  return getConfig().apiKeys?.[provider];
+  const envMap: Record<string, string> = {
+    openai: 'OPENAI_API_KEY',
+    anthropic: 'ANTHROPIC_API_KEY',
+    google: 'GOOGLE_API_KEY',
+  };
+  const envVar = envMap[provider] || `${provider.toUpperCase()}_API_KEY`;
+  return process.env[envVar];
 }
 
 /**
@@ -162,21 +130,5 @@ export function getAgentConfig(agentType: AgentType): AgentModelConfig {
 export async function saveConfig(): Promise<void> {
   const config = getConfig();
   const configPath = path.join(PATHS.globalConfig, 'config.json');
-
-  // Remove env API keys before saving
-  const configToSave = { ...config };
-  if (config.apiKeys) {
-    configToSave.apiKeys = { ...config.apiKeys };
-    if (process.env.OPENAI_API_KEY && configToSave.apiKeys.openai === process.env.OPENAI_API_KEY) {
-      delete configToSave.apiKeys.openai;
-    }
-    if (process.env.ANTHROPIC_API_KEY && configToSave.apiKeys.anthropic === process.env.ANTHROPIC_API_KEY) {
-      delete configToSave.apiKeys.anthropic;
-    }
-    if (process.env.GOOGLE_API_KEY && configToSave.apiKeys.google === process.env.GOOGLE_API_KEY) {
-      delete configToSave.apiKeys.google;
-    }
-  }
-
-  await writeJsonFile(configPath, configToSave);
+  await writeJsonFile(configPath, config);
 }

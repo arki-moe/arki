@@ -569,7 +569,8 @@ The `init()` function performs three initialization steps:
    - Loads global config from `PATHS.globalConfig/config.json`
    - Loads project config from `PATHS.projectConfig/config.json` (if exists)
    - Merges configs (project overrides global)
-   - Loads API keys from environment variables
+
+API keys are read directly from environment variables via `getApiKey()`.
 
 ```typescript
 import { init } from 'arki';
