@@ -72,17 +72,12 @@ async function main() {
   const model = MODELS[arkiAgentConfig.model];
 
   console.log();
-  log(`<cyan>Arki AI Agent v${packageJson.version}</cyan>`);
-  console.log();
-  log(`<dim>Model: ${arkiAgentConfig.model}${model ? ` (${model.name})` : ''}</dim>`);
-  log(`<dim>Working directory: ${workingDir}</dim>`);
-  log(`<dim>OS: ${OS.name} (${OS.version})</dim>`);
+  log(`<bold><cyan>Arki AI Agent</cyan></bold> <dim>v${packageJson.version}</dim>`);
+  log(`<green>Model:</green> <bold>${model?.name || arkiAgentConfig.model}</bold> <dim>|</dim> <green>OS:</green> ${OS.name} <dim>(${OS.version})</dim>`);
+  log(`<green>Path:</green> <dim>${workingDir}</dim>`);
+  log(`<green>Tools:</green> ${Object.keys(TOOLS).length} loaded`);
   if (isDebugMode()) {
     log(`<yellow>Debug mode enabled</yellow>`);
-  }
-  console.log();
-  log(`<dim>Loaded ${Object.keys(TOOLS).length} tools</dim>`);
-  if (isDebugMode()) {
     debug('Init', 'Loaded tools', Object.keys(TOOLS));
     debug('Init', 'Agent config', arkiAgentConfig);
   }
