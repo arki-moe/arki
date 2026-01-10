@@ -1,6 +1,6 @@
-import { Agent, SystemMsg } from '../index.js';
-import { getAdapter, workingDir, PROCEDURES, TOOLS } from '../../global.js';
-import { getAgentConfig } from '../../init/index.js';
+import { Agent } from '../Agent.js';
+import { SystemMsg } from '../Msg.js';
+import { getAdapter, workingDir, PROCEDURES, TOOLS, getAgentConfig } from '../../global.js';
 import { MODELS } from '../../model/index.js';
 import { HAS_MANUAL } from '../../tool/Tool.js';
 import systemPromptTemplate from './system.md';

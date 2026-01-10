@@ -14,31 +14,25 @@ arki/
 │   │   ├── debug.ts      # Debug mode and logging
 │   │   └── log.ts        # General logging functions (supports XML color tags)
 │   ├── event_bus/
-│   │   ├── index.ts      # EventBus export entry
 │   │   ├── Event.ts      # Event base class and concrete event classes
 │   │   └── EventBus.ts   # EventBus singleton, subscribe/publish functions
 │   ├── agent/
-│   │   ├── index.ts      # Agent export entry
 │   │   ├── Agent.ts      # Agent class implementation
 │   │   ├── Msg.ts        # Message type definitions and constructors
 │   │   └── Arki/
-│   │       ├── index.ts  # Arki agent creation logic
 │   │       ├── Arki.ts   # createArkiAgent implementation
 │   │       └── system.md # Arki agent system prompt
 │   ├── adapter/
 │   │   ├── Adapter.ts    # LLM adapter base class
-│   │   ├── index.ts      # Adapter export entry
 │   │   └── openai.ts     # OpenAI adapter
 │   ├── model/
 │   │   ├── index.ts      # Type definitions and exports
 │   │   └── models.ts     # Model configuration data (MODELS)
 │   ├── init/
-│   │   ├── index.ts      # Initialization entry and re-exports
 │   │   ├── global.ts     # Global state (TOOLS, PROCEDURES, adapters registry) and init function
 │   │   ├── project.ts    # Project config initialization (trust prompt, copy template)
 │   │   └── loader.ts     # Config loading and merging
 │   ├── fs/
-│   │   ├── index.ts      # Re-exports from submodules
 │   │   ├── paths.ts      # OS detection, PATHS object, workingDir
 │   │   ├── file.ts       # File operations (read, write, exists)
 │   │   └── dir.ts        # Directory operations (copy, exists, mkdir)

@@ -1,5 +1,6 @@
 import * as path from 'path';
-import { PATHS, readJsonFile, writeJsonFile } from '../fs/index.js';
+import { PATHS } from '../fs/paths.js';
+import { readJsonFile, writeJsonFile } from '../fs/file.js';
 
 /**
  * Agent type

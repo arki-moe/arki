@@ -2,8 +2,8 @@ import { Msg, MsgType, ToolCallMsg, UserMsg, ToolResultMsg, ToolResult, AsyncToo
 import { Adapter, AdapterOptions } from '../adapter/Adapter.js';
 import { Tool } from '../tool/Tool.js';
 import { debug, warn } from '../log/index.js';
+import { publish } from '../event_bus/EventBus.js';
 import {
-  publish,
   StreamEvent,
   ToolCallReceivedEvent,
   BeforeToolRunEvent,
@@ -11,7 +11,7 @@ import {
   AsyncToolResultEvent,
   RunStartEvent,
   RunEndEvent,
-} from '../event_bus/index.js';
+} from '../event_bus/Event.js';
 
 /**
  * Generate async call ID for tracking

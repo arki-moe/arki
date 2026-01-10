@@ -3,14 +3,13 @@ import { Agent } from '../../src/agent/Agent.js';
 import { MsgType, ToolCallMsg, ToolCall, Msg, AIMsg, SystemMsg, ToolResultMsg } from '../../src/agent/Msg.js';
 import { Adapter, AdapterOptions, AdapterResponse } from '../../src/adapter/Adapter.js';
 import { Tool } from '../../src/tool/Tool.js';
+import { subscribe, eventBus } from '../../src/event_bus/EventBus.js';
 import {
-  subscribe,
-  eventBus,
   StreamEvent,
   ToolCallReceivedEvent,
   BeforeToolRunEvent,
   ToolResultEvent,
-} from '../../src/event_bus/index.js';
+} from '../../src/event_bus/Event.js';
 
 // Create a mock adapter
 class MockAdapter extends Adapter {

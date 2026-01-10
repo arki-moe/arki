@@ -1,5 +1,6 @@
 import * as readline from 'readline';
-import { PATHS, workingDir, copyDir, dirExists } from '../fs/index.js';
+import { PATHS, workingDir } from '../fs/paths.js';
+import { copyDir, dirExists } from '../fs/dir.js';
 import { print, convertColorTags } from '../log/index.js';
 
 /**

@@ -2,7 +2,8 @@ import { Tool } from '../tool/Tool.js';
 import { Procedure } from '../procedure/Procedure.js';
 import { Adapter } from '../adapter/Adapter.js';
 import { OpenAIAdapter } from '../adapter/openai.js';
-import { PATHS, copyDir, dirExists } from '../fs/index.js';
+import { PATHS } from '../fs/paths.js';
+import { copyDir, dirExists } from '../fs/dir.js';
 
 /** Global tool registry */
 export const TOOLS: Record<string, Tool> = {};
@@ -56,7 +57,7 @@ async function initAdapters(): Promise<void> {
 
 /** Initialize global state */
 export async function init(cwd?: string, forceInit?: boolean): Promise<void> {
-  const { setWorkingDir } = await import('../fs/index.js');
+  const { setWorkingDir } = await import('../fs/paths.js');
   setWorkingDir(cwd || process.cwd());
 
   await initGlobalConfig();

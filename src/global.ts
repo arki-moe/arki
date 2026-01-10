@@ -1,5 +1,5 @@
 // Re-export from fs module
-export { OS, PATHS, workingDir, setWorkingDir, type OS_TYPE } from './fs/index.js';
+export { OS, PATHS, workingDir, setWorkingDir, type OS_TYPE } from './fs/paths.js';
 
 // Re-export from init/global module
 export { TOOLS, PROCEDURES, adapters, getAdapter, init } from './init/global.js';
@@ -13,4 +13,4 @@ export {
   type GlobalConfig,
   type AgentType,
   type AgentModelConfig,
-} from './init/index.js';
+} from './init/loader.js';

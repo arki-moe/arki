@@ -8,9 +8,10 @@ import { init, getAgentConfig, TOOLS, PROCEDURES, workingDir, OS } from './globa
 import './tool/index.js';
 import './procedure/index.js';
 import { setDebugMode, isDebugMode, debug, log, print, error, formatNumber, convertColorTags, getTimestamp, createColorConverter } from './log/index.js';
-import { subscribe, StreamEvent, BeforeToolRunEvent, ToolResultEvent } from './event_bus/index.js';
+import { subscribe } from './event_bus/EventBus.js';
+import { StreamEvent, BeforeToolRunEvent, ToolResultEvent } from './event_bus/Event.js';
 import { MODELS } from './model/index.js';
-import { createArkiAgent } from './agent/Arki/index.js';
+import { createArkiAgent } from './agent/Arki/Arki.js';
 import packageJson from '../package.json' with { type: 'json' };
 
 function getConfigPath(): string {
@@ -254,8 +255,10 @@ async function main() {
 export * from './global.js';
 export * from './log/index.js';
 export * from './agent/Msg.js';
-export * from './adapter/index.js';
-export * from './agent/index.js';
+export * from './adapter/Adapter.js';
+export * from './adapter/openai.js';
+export * from './agent/Agent.js';
+export * from './agent/Msg.js';
 export * from './tool/index.js';
 export * from './model/index.js';
 
