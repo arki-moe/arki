@@ -7,6 +7,8 @@ This document provides a comprehensive overview of all test cases in the Arki pr
 - [Adapter Tests](#adapter-tests)
 - [Agent Tests](#agent-tests)
 - [Message Tests](#message-tests)
+- [EventBus Tests](#eventbus-tests)
+- [Log Tests](#log-tests)
 - [File System Tests](#file-system-tests)
 - [Model Tests](#model-tests)
 - [Procedure Tests](#procedure-tests)
@@ -95,11 +97,174 @@ Tests for the Agent class that orchestrates LLM interactions and tool execution.
 
 **File:** `test/agent/msg.test.ts`
 
-Tests for message type definitions.
+Tests for message type definitions and message classes.
+
+### MsgType Tests
 
 | Test Case | Description |
 |-----------|-------------|
-| `should have correct values` | Verifies MsgType enum values (system, user, ai, tool_call, tool_result) |
+| `should have correct values` | Verifies MsgType enum values (system, user, ai, tool_call, tool_result, async_tool_result) |
+
+### SystemMsg Tests
+
+| Test Case | Description |
+|-----------|-------------|
+| `should create with correct type and content` | Verifies SystemMsg has correct type and content |
+| `should set timestamp on creation` | Verifies timestamp is set during construction |
+| `should handle empty content` | Verifies empty string content is handled |
+
+### UserMsg Tests
+
+| Test Case | Description |
+|-----------|-------------|
+| `should create with correct type and content` | Verifies UserMsg has correct type and content |
+| `should handle multiline content` | Verifies multiline content is preserved |
+
+### AIMsg Tests
+
+| Test Case | Description |
+|-----------|-------------|
+| `should create with correct type and content` | Verifies AIMsg has correct type and content |
+
+### ToolCallMsg Tests
+
+| Test Case | Description |
+|-----------|-------------|
+| `should create with content and tool calls` | Verifies creation with content and tool calls array |
+| `should handle multiple tool calls` | Verifies handling of multiple tool calls |
+| `should handle empty tool calls array` | Verifies empty array is handled |
+| `should handle tool call with asyncCallId` | Verifies async tool call tracking ID |
+
+### ToolResultMsg Tests
+
+| Test Case | Description |
+|-----------|-------------|
+| `should create with tool results` | Verifies creation with tool results array |
+| `should handle multiple tool results` | Verifies multiple results handling |
+| `should handle error results` | Verifies isError flag handling |
+| `should handle async placeholder results` | Verifies asyncCallId for placeholder results |
+| `static single() should create single result message` | Verifies helper for single result |
+| `static single() should create single error result message` | Verifies error flag in single helper |
+| `static single() should create single success result message` | Verifies success flag in single helper |
+
+### AsyncToolResultMsg Tests
+
+| Test Case | Description |
+|-----------|-------------|
+| `should create with correct properties` | Verifies all properties are set correctly |
+| `should format content with tracking info` | Verifies content includes tracking ID and tool name |
+| `should handle error result` | Verifies isError flag for errors |
+| `should handle success result explicitly` | Verifies explicit success (isError=false) |
+| `should set timestamp on creation` | Verifies timestamp is set during construction |
+
+---
+
+## EventBus Tests
+
+**File:** `test/event_bus/EventBus.test.ts`
+
+Tests for the EventBus pub/sub system and Event classes.
+
+### Subscribe Tests
+
+| Test Case | Description |
+|-----------|-------------|
+| `should subscribe to specific agent events` | Verifies subscription to named agent |
+| `should not trigger callback for different agent` | Verifies agent filtering works |
+| `should support wildcard subscription` | Verifies '*' subscribes to all agents |
+| `should trigger both specific and wildcard subscribers` | Verifies both types receive events |
+| `should support multiple subscribers for same event and agent` | Verifies multiple callbacks |
+
+### Unsubscribe Tests
+
+| Test Case | Description |
+|-----------|-------------|
+| `should return unsubscribe function` | Verifies subscribe returns function |
+| `should stop receiving events after unsubscribe` | Verifies unsubscribe stops callbacks |
+| `should only unsubscribe the specific callback` | Verifies other callbacks still work |
+| `should handle unsubscribe when callback not found` | Verifies no error on double unsubscribe |
+| `should clean up empty subscription arrays` | Verifies cleanup after last unsubscribe |
+
+### Publish Tests
+
+| Test Case | Description |
+|-----------|-------------|
+| `should not throw when no subscribers` | Verifies safe publish with no listeners |
+| `should pass event object to callback` | Verifies event is passed correctly |
+
+### Clear Tests
+
+| Test Case | Description |
+|-----------|-------------|
+| `should remove all subscriptions` | Verifies clear removes all subscriptions |
+
+### Event Classes Tests
+
+| Test Case | Description |
+|-----------|-------------|
+| `StreamEvent should create with agent name and chunk` | Verifies StreamEvent properties |
+| `ToolCallReceivedEvent should create with tool calls array` | Verifies ToolCallReceivedEvent properties |
+| `BeforeToolRunEvent should create with tool name and args` | Verifies BeforeToolRunEvent properties |
+| `ToolResultEvent should create with all properties` | Verifies ToolResultEvent properties |
+| `ToolResultEvent should handle error result` | Verifies error flag handling |
+| `AsyncToolResultEvent should create with asyncCallId` | Verifies AsyncToolResultEvent properties |
+| `AsyncToolResultEvent should handle error result` | Verifies error flag handling |
+| `RunStartEvent should create with user input` | Verifies RunStartEvent properties |
+| `RunEndEvent should create with response and tool calls` | Verifies RunEndEvent properties |
+| `RunEndEvent should include usage information` | Verifies optional usage stats |
+
+---
+
+## Log Tests
+
+**File:** `test/log/log.test.ts`
+
+Tests for logging utilities.
+
+### getTimestamp Tests
+
+| Test Case | Description |
+|-----------|-------------|
+| `should return timestamp in HH:MM:SS.mmm format` | Verifies timestamp format |
+| `should return current time` | Verifies timestamp is current |
+
+### formatNumber Tests
+
+| Test Case | Description |
+|-----------|-------------|
+| `should return number as string for 0` | Verifies 0 handling |
+| `should return number as string for small numbers` | Verifies numbers < 1000 |
+| `should format 1000 as 1k` | Verifies k suffix |
+| `should format with one decimal for numbers under 100k` | Verifies decimal formatting (1372 → "1.4k") |
+| `should remove .0 suffix` | Verifies 2000 → "2k" not "2.0k" |
+| `should round to whole number for 100k and above` | Verifies large number formatting |
+| `should handle edge cases around 100k` | Verifies boundary behavior |
+
+### print Tests
+
+| Test Case | Description |
+|-----------|-------------|
+| `should print with newline by default` | Verifies default newline behavior |
+| `should print without newline when specified` | Verifies newline=false |
+| `should convert color tags` | Verifies XML color tag conversion |
+| `should handle multiple color tags` | Verifies nested tags |
+| `should handle empty string` | Verifies empty string handling |
+
+### log Tests
+
+| Test Case | Description |
+|-----------|-------------|
+| `should log with timestamp prefix` | Verifies timestamp is prepended |
+| `should convert color tags in message` | Verifies color conversion in log |
+
+### Convenience Functions Tests
+
+| Test Case | Description |
+|-----------|-------------|
+| `info should log with [INFO] prefix in blue` | Verifies info() format |
+| `success should log with [OK] prefix in green` | Verifies success() format |
+| `warn should log with [WARN] prefix in yellow` | Verifies warn() format |
+| `error should log with [ERROR] prefix in red` | Verifies error() format |
 
 ---
 
@@ -624,6 +789,8 @@ Tests for the procedure reading tool.
 
 ## Initialization Tests
 
+### Project Initialization
+
 **File:** `test/init-project.test.ts`
 
 Tests for project initialization.
@@ -631,6 +798,60 @@ Tests for project initialization.
 | Test Case | Description |
 |-----------|-------------|
 | `initializes project config without prompting when forced` | Verifies --init flag creates .arki directory without prompt |
+
+### Config Loader
+
+**File:** `test/init/loader.test.ts`
+
+Tests for configuration loading and management.
+
+#### getApiKey Tests
+
+| Test Case | Description |
+|-----------|-------------|
+| `should return OpenAI API key from environment` | Verifies OPENAI_API_KEY retrieval |
+| `should return Anthropic API key from environment` | Verifies ANTHROPIC_API_KEY retrieval |
+| `should return Google API key from environment` | Verifies GOOGLE_API_KEY retrieval |
+| `should return undefined when key not set` | Verifies undefined for missing keys |
+| `should handle unknown provider with uppercase convention` | Verifies CUSTOM_API_KEY pattern |
+
+#### loadConfigs Tests
+
+| Test Case | Description |
+|-----------|-------------|
+| `should load global config` | Verifies loading from global config path |
+| `should throw error when global config not found` | Verifies error for missing config |
+| `should merge project config over global config` | Verifies project overrides global |
+| `should work without project config` | Verifies optional project config |
+| `should cache loaded config` | Verifies config caching |
+
+#### getConfig Tests
+
+| Test Case | Description |
+|-----------|-------------|
+| `should throw error when config not loaded` | Verifies error before loadConfigs() |
+| `should return loaded config` | Verifies config retrieval after load |
+
+#### getAgentConfig Tests
+
+| Test Case | Description |
+|-----------|-------------|
+| `should return agent config when exists` | Verifies agent config retrieval |
+| `should throw error when agent config not found` | Verifies error for unknown agent |
+
+#### saveConfig Tests
+
+| Test Case | Description |
+|-----------|-------------|
+| `should save config to global config file` | Verifies config persistence |
+
+#### deepMerge Tests (via loadConfigs)
+
+| Test Case | Description |
+|-----------|-------------|
+| `should merge multiple agent configs` | Verifies multi-agent merging |
+| `should handle empty project agents` | Verifies empty override handling |
+| `should handle project config without agents key` | Verifies missing agents key |
 
 ---
 
@@ -689,7 +910,10 @@ test/
 │   └── openai.ts        # OpenAI API mock
 ├── adapter/             # Adapter tests
 ├── agent/               # Agent and message tests
+├── event_bus/           # EventBus pub/sub tests
 ├── fs/                  # File system tests
+├── init/                # Config loader tests
+├── log/                 # Logging utilities tests
 ├── model/               # Model registry tests
 ├── procedure/           # Procedure tests
 ├── tool/                # Tool tests
