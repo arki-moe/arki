@@ -1,6 +1,7 @@
 import { Msg, MsgType, ToolCallMsg, UserMsg, ToolResultMsg, ToolResult, AsyncToolResultMsg } from './Msg.js';
 import { Adapter, AdapterOptions } from '../adapter/Adapter.js';
 import { Tool } from '../tool/Tool.js';
+import { AGENTS } from '../global.js';
 import { debug, warn } from '../log/index.js';
 import { publish } from '../event_bus/EventBus.js';
 import {
@@ -68,6 +69,8 @@ export class Agent {
     for (const tool of config.tools) {
       this.toolsMap[tool.name] = tool;
     }
+    // Register to global AGENTS registry
+    AGENTS[config.name] = this;
   }
 
   /** Get agent name */
