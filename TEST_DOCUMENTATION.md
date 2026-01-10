@@ -324,6 +324,116 @@ Tests for the operation-based cached file system with multi-agent support.
 | `should return null for non-existent file` | Verifies null for missing files |
 | `should invalidate cache for specific file` | Verifies selective cache invalidation |
 
+### Internal Helper Functions
+
+Tests for internal helper functions exported via `_internal` for testing purposes.
+
+#### countOccurrences Tests
+
+| Test Case | Description |
+|-----------|-------------|
+| `should return 0 for empty target string` | Verifies empty target returns 0 |
+| `should return 0 for empty source string` | Verifies empty source returns 0 |
+| `should return 0 when both strings are empty` | Verifies both empty returns 0 |
+| `should return 0 when target not found` | Verifies 0 when target doesn't exist |
+| `should return 1 when target appears once` | Verifies single occurrence count |
+| `should return correct count for multiple occurrences` | Verifies multiple occurrence count |
+| `should count non-overlapping matches for repeating patterns` | Verifies "aa" in "aaa" returns 1 |
+| `should count non-overlapping matches in longer repeating patterns` | Verifies "aa" in "aaaa" returns 2 |
+| `should find target at the beginning` | Verifies target at string start |
+| `should find target at the end` | Verifies target at string end |
+| `should find target that equals entire string` | Verifies target equals full string |
+| `should handle single character target` | Verifies single char search |
+| `should handle target longer than source` | Verifies long target returns 0 |
+| `should be case sensitive` | Verifies case sensitivity |
+| `should handle special characters` | Verifies special chars like '.' |
+| `should handle newlines in content` | Verifies newline counting |
+| `should handle multiline target` | Verifies multiline target matching |
+
+#### applyOperation Tests
+
+| Test Case | Description |
+|-----------|-------------|
+| `should insert before target at the beginning` | Verifies insert before at start |
+| `should insert before target in the middle` | Verifies insert before in middle |
+| `should insert before target at the end` | Verifies insert before at end |
+| `should insert after target at the beginning` | Verifies insert after at start |
+| `should insert after target at the end` | Verifies insert after at end |
+| `should insert empty content (no-op)` | Verifies empty insert is no-op |
+| `should insert when content is undefined` | Verifies undefined content handling |
+| `should default to after when position not specified` | Verifies default position is 'after' |
+| `should replace target at the beginning` | Verifies replace at start |
+| `should replace target in the middle` | Verifies replace in middle |
+| `should replace target at the end` | Verifies replace at end |
+| `should replace with empty string (effectively delete)` | Verifies replace with empty |
+| `should replace with longer content` | Verifies expanding replace |
+| `should replace with shorter content` | Verifies shrinking replace |
+| `should replace entire content` | Verifies full content replace |
+| `should handle undefined content (replace with empty)` | Verifies undefined replace |
+| `should delete target at the beginning` | Verifies delete at start |
+| `should delete target in the middle` | Verifies delete in middle |
+| `should delete target at the end` | Verifies delete at end |
+| `should delete entire content` | Verifies delete all content |
+| `should delete single character` | Verifies single char delete |
+| `should throw when target not found` | Verifies error on missing target |
+| `should handle multiline content` | Verifies multiline operations |
+| `should handle special regex characters in target` | Verifies special chars like '$' |
+| `should handle unicode characters` | Verifies unicode support |
+| `should handle emoji` | Verifies emoji support |
+
+#### getOperationRange Tests
+
+| Test Case | Description |
+|-----------|-------------|
+| `should return point range for insert before at beginning` | Verifies point at position 0 |
+| `should return point range for insert before in middle` | Verifies point at target start |
+| `should return point range for insert after at beginning` | Verifies point at target end |
+| `should return point range for insert after at end` | Verifies point at string end |
+| `should default to after when position not specified` | Verifies default position |
+| `should return range covering target at beginning` | Verifies replace range at start |
+| `should return range covering target in middle` | Verifies replace range in middle |
+| `should return range covering target at end` | Verifies replace range at end |
+| `should return range for entire content` | Verifies full content range |
+| `should return range for delete at beginning` | Verifies delete range at start |
+| `should return range for delete in middle` | Verifies delete range in middle |
+| `should return range for delete at end` | Verifies delete range at end |
+| `should return null when target not found` | Verifies null for missing target |
+| `should return null for empty content` | Verifies null for empty string |
+| `should handle single character target` | Verifies single char range |
+| `should handle multiline target` | Verifies multiline range |
+| `should handle unicode characters correctly` | Verifies unicode range calculation |
+
+#### rangesOverlap Tests
+
+| Test Case | Description |
+|-----------|-------------|
+| `should detect overlap when two points are at same position` | Verifies same point overlap |
+| `should not overlap when two points are at different positions` | Verifies different points don't overlap |
+| `should detect overlap when point is at start of range` | Verifies point at range start |
+| `should detect overlap when point is at end of range` | Verifies point at range end |
+| `should detect overlap when point is inside range` | Verifies point inside range |
+| `should not overlap when point is before range` | Verifies point before range |
+| `should not overlap when point is after range` | Verifies point after range |
+| `should detect overlap when range contains point (reversed order)` | Verifies reversed arg order |
+| `should detect overlap when point at range start (reversed order)` | Verifies reversed point at start |
+| `should detect overlap when point at range end (reversed order)` | Verifies reversed point at end |
+| `should not overlap when point before range (reversed order)` | Verifies reversed point before |
+| `should not overlap when point after range (reversed order)` | Verifies reversed point after |
+| `should detect full overlap (same range)` | Verifies identical ranges |
+| `should detect overlap when one range contains another` | Verifies containment overlap |
+| `should detect overlap when ranges partially overlap (a starts before b)` | Verifies partial overlap |
+| `should detect overlap when ranges partially overlap (b starts before a)` | Verifies reversed partial overlap |
+| `should not overlap when ranges are adjacent (a ends where b starts)` | Verifies adjacent ranges don't overlap |
+| `should not overlap when ranges are adjacent (b ends where a starts)` | Verifies reversed adjacent |
+| `should not overlap when ranges are completely separate` | Verifies separate ranges |
+| `should not overlap when ranges are completely separate (reversed)` | Verifies reversed separate |
+| `should handle ranges at position 0` | Verifies position 0 edge case |
+| `should handle point at position 0` | Verifies point at 0 |
+| `should handle very large positions` | Verifies large number handling |
+| `should handle single-character ranges` | Verifies 1-char range overlap |
+| `should not overlap single-character adjacent ranges` | Verifies adjacent 1-char ranges |
+| `should detect overlap when ranges share one character` | Verifies minimal overlap |
+
 ---
 
 ## Model Tests

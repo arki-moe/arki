@@ -583,3 +583,12 @@ export class CachedFileSystem {
 
 /** Global CachedFileSystem instance */
 export const cachedFileSystem = new CachedFileSystem();
+
+// ==================== Internal Helpers (exported for testing) ====================
+
+export const _internal = {
+  countOccurrences,
+  applyOperation,
+  getOperationRange,
+  rangesOverlap,
+};

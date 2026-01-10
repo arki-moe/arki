@@ -7,7 +7,10 @@ import {
   TargetNotFoundError,
   AmbiguousTargetError,
   ConflictError,
+  _internal,
 } from '../../src/fs/CachedFileSystem.js';
+
+const { countOccurrences, applyOperation, getOperationRange, rangesOverlap } = _internal;
 
 describe('CachedFileSystem', () => {
   let tempDir: string;
@@ -551,6 +554,618 @@ describe('CachedFileSystem', () => {
       // Should now read new content
       const content = await cachedFs.readFile(filePath, 'agent1');
       expect(content).toBe('Modified');
+    });
+  });
+});
+
+// ==================== Internal Helper Functions ====================
+
+describe('countOccurrences', () => {
+  it('should return 0 for empty target string', () => {
+    expect(countOccurrences('hello world', '')).toBe(0);
+  });
+
+  it('should return 0 for empty source string', () => {
+    expect(countOccurrences('', 'hello')).toBe(0);
+  });
+
+  it('should return 0 when both strings are empty', () => {
+    expect(countOccurrences('', '')).toBe(0);
+  });
+
+  it('should return 0 when target not found', () => {
+    expect(countOccurrences('hello world', 'xyz')).toBe(0);
+  });
+
+  it('should return 1 when target appears once', () => {
+    expect(countOccurrences('hello world', 'hello')).toBe(1);
+  });
+
+  it('should return correct count for multiple occurrences', () => {
+    expect(countOccurrences('hello hello hello', 'hello')).toBe(3);
+  });
+
+  it('should count non-overlapping matches for repeating patterns', () => {
+    // "aa" in "aaa" should be 1 (non-overlapping: positions 0, then next search starts at 2)
+    expect(countOccurrences('aaa', 'aa')).toBe(1);
+  });
+
+  it('should count non-overlapping matches in longer repeating patterns', () => {
+    // "aa" in "aaaa" should be 2 (positions 0 and 2)
+    expect(countOccurrences('aaaa', 'aa')).toBe(2);
+  });
+
+  it('should find target at the beginning', () => {
+    expect(countOccurrences('hello world', 'hello')).toBe(1);
+  });
+
+  it('should find target at the end', () => {
+    expect(countOccurrences('hello world', 'world')).toBe(1);
+  });
+
+  it('should find target that equals entire string', () => {
+    expect(countOccurrences('hello', 'hello')).toBe(1);
+  });
+
+  it('should handle single character target', () => {
+    expect(countOccurrences('abcabc', 'a')).toBe(2);
+  });
+
+  it('should handle target longer than source', () => {
+    expect(countOccurrences('hi', 'hello world')).toBe(0);
+  });
+
+  it('should be case sensitive', () => {
+    expect(countOccurrences('Hello HELLO hello', 'hello')).toBe(1);
+  });
+
+  it('should handle special characters', () => {
+    expect(countOccurrences('a.b.c.d', '.')).toBe(3);
+  });
+
+  it('should handle newlines in content', () => {
+    expect(countOccurrences('line1\nline2\nline3', '\n')).toBe(2);
+  });
+
+  it('should handle multiline target', () => {
+    expect(countOccurrences('a\nb\na\nb', 'a\nb')).toBe(2);
+  });
+});
+
+describe('applyOperation', () => {
+  describe('insert operations', () => {
+    it('should insert before target at the beginning', () => {
+      const result = applyOperation('hello world', {
+        type: 'insert',
+        target: 'hello',
+        content: 'say ',
+        position: 'before',
+      });
+      expect(result).toBe('say hello world');
+    });
+
+    it('should insert before target in the middle', () => {
+      const result = applyOperation('hello world', {
+        type: 'insert',
+        target: 'world',
+        content: 'beautiful ',
+        position: 'before',
+      });
+      expect(result).toBe('hello beautiful world');
+    });
+
+    it('should insert before target at the end', () => {
+      const result = applyOperation('hello world', {
+        type: 'insert',
+        target: 'world',
+        content: 'beautiful ',
+        position: 'before',
+      });
+      expect(result).toBe('hello beautiful world');
+    });
+
+    it('should insert after target at the beginning', () => {
+      const result = applyOperation('hello world', {
+        type: 'insert',
+        target: 'hello',
+        content: ' beautiful',
+        position: 'after',
+      });
+      expect(result).toBe('hello beautiful world');
+    });
+
+    it('should insert after target at the end', () => {
+      const result = applyOperation('hello world', {
+        type: 'insert',
+        target: 'world',
+        content: '!',
+        position: 'after',
+      });
+      expect(result).toBe('hello world!');
+    });
+
+    it('should insert empty content (no-op)', () => {
+      const result = applyOperation('hello world', {
+        type: 'insert',
+        target: 'hello',
+        content: '',
+        position: 'after',
+      });
+      expect(result).toBe('hello world');
+    });
+
+    it('should insert when content is undefined', () => {
+      const result = applyOperation('hello world', {
+        type: 'insert',
+        target: 'hello',
+        content: undefined,
+        position: 'after',
+      });
+      expect(result).toBe('hello world');
+    });
+
+    it('should default to after when position not specified', () => {
+      const result = applyOperation('hello world', {
+        type: 'insert',
+        target: 'hello',
+        content: '!',
+        // position is undefined, defaults to 'after' in else branch
+      });
+      expect(result).toBe('hello! world');
+    });
+  });
+
+  describe('replace operations', () => {
+    it('should replace target at the beginning', () => {
+      const result = applyOperation('hello world', {
+        type: 'replace',
+        target: 'hello',
+        content: 'hi',
+      });
+      expect(result).toBe('hi world');
+    });
+
+    it('should replace target in the middle', () => {
+      const result = applyOperation('hello beautiful world', {
+        type: 'replace',
+        target: 'beautiful',
+        content: 'ugly',
+      });
+      expect(result).toBe('hello ugly world');
+    });
+
+    it('should replace target at the end', () => {
+      const result = applyOperation('hello world', {
+        type: 'replace',
+        target: 'world',
+        content: 'universe',
+      });
+      expect(result).toBe('hello universe');
+    });
+
+    it('should replace with empty string (effectively delete)', () => {
+      const result = applyOperation('hello world', {
+        type: 'replace',
+        target: ' world',
+        content: '',
+      });
+      expect(result).toBe('hello');
+    });
+
+    it('should replace with longer content', () => {
+      const result = applyOperation('hi', {
+        type: 'replace',
+        target: 'hi',
+        content: 'hello world',
+      });
+      expect(result).toBe('hello world');
+    });
+
+    it('should replace with shorter content', () => {
+      const result = applyOperation('hello world', {
+        type: 'replace',
+        target: 'hello world',
+        content: 'hi',
+      });
+      expect(result).toBe('hi');
+    });
+
+    it('should replace entire content', () => {
+      const result = applyOperation('hello', {
+        type: 'replace',
+        target: 'hello',
+        content: 'world',
+      });
+      expect(result).toBe('world');
+    });
+
+    it('should handle undefined content (replace with empty)', () => {
+      const result = applyOperation('hello world', {
+        type: 'replace',
+        target: ' world',
+        content: undefined,
+      });
+      expect(result).toBe('hello');
+    });
+  });
+
+  describe('delete operations', () => {
+    it('should delete target at the beginning', () => {
+      const result = applyOperation('hello world', {
+        type: 'delete',
+        target: 'hello ',
+      });
+      expect(result).toBe('world');
+    });
+
+    it('should delete target in the middle', () => {
+      const result = applyOperation('hello beautiful world', {
+        type: 'delete',
+        target: ' beautiful',
+      });
+      expect(result).toBe('hello world');
+    });
+
+    it('should delete target at the end', () => {
+      const result = applyOperation('hello world', {
+        type: 'delete',
+        target: ' world',
+      });
+      expect(result).toBe('hello');
+    });
+
+    it('should delete entire content', () => {
+      const result = applyOperation('hello', {
+        type: 'delete',
+        target: 'hello',
+      });
+      expect(result).toBe('');
+    });
+
+    it('should delete single character', () => {
+      const result = applyOperation('hello', {
+        type: 'delete',
+        target: 'l',
+      });
+      // Only first occurrence is deleted
+      expect(result).toBe('helo');
+    });
+  });
+
+  describe('error cases', () => {
+    it('should throw TargetNotFoundError when target not found', () => {
+      expect(() =>
+        applyOperation('hello world', {
+          type: 'replace',
+          target: 'xyz',
+          content: 'abc',
+        })
+      ).toThrow();
+    });
+  });
+
+  describe('edge cases', () => {
+    it('should handle multiline content', () => {
+      const result = applyOperation('line1\nline2\nline3', {
+        type: 'replace',
+        target: 'line2',
+        content: 'modified',
+      });
+      expect(result).toBe('line1\nmodified\nline3');
+    });
+
+    it('should handle special regex characters in target', () => {
+      const result = applyOperation('price: $100.00', {
+        type: 'replace',
+        target: '$100.00',
+        content: '$200.00',
+      });
+      expect(result).toBe('price: $200.00');
+    });
+
+    it('should handle unicode characters', () => {
+      const result = applyOperation('hello 世界', {
+        type: 'replace',
+        target: '世界',
+        content: 'world',
+      });
+      expect(result).toBe('hello world');
+    });
+
+    it('should handle emoji', () => {
+      const result = applyOperation('hello 👋 world', {
+        type: 'replace',
+        target: '👋',
+        content: '🌍',
+      });
+      expect(result).toBe('hello 🌍 world');
+    });
+  });
+});
+
+describe('getOperationRange', () => {
+  describe('insert operations', () => {
+    it('should return point range for insert before at beginning', () => {
+      const range = getOperationRange('hello world', {
+        type: 'insert',
+        target: 'hello',
+        content: 'say ',
+        position: 'before',
+      });
+      expect(range).toEqual({ start: 0, end: 0 });
+    });
+
+    it('should return point range for insert before in middle', () => {
+      const range = getOperationRange('hello world', {
+        type: 'insert',
+        target: 'world',
+        content: 'beautiful ',
+        position: 'before',
+      });
+      expect(range).toEqual({ start: 6, end: 6 });
+    });
+
+    it('should return point range for insert after at beginning', () => {
+      const range = getOperationRange('hello world', {
+        type: 'insert',
+        target: 'hello',
+        content: '!',
+        position: 'after',
+      });
+      // "hello" ends at position 5
+      expect(range).toEqual({ start: 5, end: 5 });
+    });
+
+    it('should return point range for insert after at end', () => {
+      const range = getOperationRange('hello world', {
+        type: 'insert',
+        target: 'world',
+        content: '!',
+        position: 'after',
+      });
+      // "world" ends at position 11
+      expect(range).toEqual({ start: 11, end: 11 });
+    });
+
+    it('should default to after when position not specified', () => {
+      const range = getOperationRange('hello world', {
+        type: 'insert',
+        target: 'hello',
+        content: '!',
+      });
+      expect(range).toEqual({ start: 5, end: 5 });
+    });
+  });
+
+  describe('replace operations', () => {
+    it('should return range covering target at beginning', () => {
+      const range = getOperationRange('hello world', {
+        type: 'replace',
+        target: 'hello',
+        content: 'hi',
+      });
+      expect(range).toEqual({ start: 0, end: 5 });
+    });
+
+    it('should return range covering target in middle', () => {
+      const range = getOperationRange('hello beautiful world', {
+        type: 'replace',
+        target: 'beautiful',
+        content: 'ugly',
+      });
+      expect(range).toEqual({ start: 6, end: 15 });
+    });
+
+    it('should return range covering target at end', () => {
+      const range = getOperationRange('hello world', {
+        type: 'replace',
+        target: 'world',
+        content: 'universe',
+      });
+      expect(range).toEqual({ start: 6, end: 11 });
+    });
+
+    it('should return range for entire content', () => {
+      const range = getOperationRange('hello', {
+        type: 'replace',
+        target: 'hello',
+        content: 'world',
+      });
+      expect(range).toEqual({ start: 0, end: 5 });
+    });
+  });
+
+  describe('delete operations', () => {
+    it('should return range covering target at beginning', () => {
+      const range = getOperationRange('hello world', {
+        type: 'delete',
+        target: 'hello ',
+      });
+      expect(range).toEqual({ start: 0, end: 6 });
+    });
+
+    it('should return range covering target in middle', () => {
+      const range = getOperationRange('hello beautiful world', {
+        type: 'delete',
+        target: ' beautiful',
+      });
+      expect(range).toEqual({ start: 5, end: 15 });
+    });
+
+    it('should return range covering target at end', () => {
+      const range = getOperationRange('hello world', {
+        type: 'delete',
+        target: ' world',
+      });
+      expect(range).toEqual({ start: 5, end: 11 });
+    });
+  });
+
+  describe('target not found', () => {
+    it('should return null when target not found', () => {
+      const range = getOperationRange('hello world', {
+        type: 'replace',
+        target: 'xyz',
+        content: 'abc',
+      });
+      expect(range).toBeNull();
+    });
+
+    it('should return null for empty content', () => {
+      const range = getOperationRange('', {
+        type: 'replace',
+        target: 'hello',
+        content: 'world',
+      });
+      expect(range).toBeNull();
+    });
+  });
+
+  describe('edge cases', () => {
+    it('should handle single character target', () => {
+      const range = getOperationRange('abc', {
+        type: 'delete',
+        target: 'b',
+      });
+      expect(range).toEqual({ start: 1, end: 2 });
+    });
+
+    it('should handle multiline target', () => {
+      const range = getOperationRange('line1\nline2\nline3', {
+        type: 'replace',
+        target: 'line2\n',
+        content: '',
+      });
+      expect(range).toEqual({ start: 6, end: 12 });
+    });
+
+    it('should handle unicode characters correctly', () => {
+      // Note: JS strings use UTF-16, so emoji might have different length
+      const range = getOperationRange('hello 世界', {
+        type: 'replace',
+        target: '世界',
+        content: 'world',
+      });
+      expect(range).toEqual({ start: 6, end: 8 });
+    });
+  });
+});
+
+describe('rangesOverlap', () => {
+  describe('point insertions (start === end)', () => {
+    it('should detect overlap when two points are at same position', () => {
+      expect(rangesOverlap({ start: 5, end: 5 }, { start: 5, end: 5 })).toBe(true);
+    });
+
+    it('should not overlap when two points are at different positions', () => {
+      expect(rangesOverlap({ start: 5, end: 5 }, { start: 6, end: 6 })).toBe(false);
+    });
+
+    it('should detect overlap when point is at start of range', () => {
+      expect(rangesOverlap({ start: 5, end: 5 }, { start: 5, end: 10 })).toBe(true);
+    });
+
+    it('should detect overlap when point is at end of range', () => {
+      expect(rangesOverlap({ start: 10, end: 10 }, { start: 5, end: 10 })).toBe(true);
+    });
+
+    it('should detect overlap when point is inside range', () => {
+      expect(rangesOverlap({ start: 7, end: 7 }, { start: 5, end: 10 })).toBe(true);
+    });
+
+    it('should not overlap when point is before range', () => {
+      expect(rangesOverlap({ start: 4, end: 4 }, { start: 5, end: 10 })).toBe(false);
+    });
+
+    it('should not overlap when point is after range', () => {
+      expect(rangesOverlap({ start: 11, end: 11 }, { start: 5, end: 10 })).toBe(false);
+    });
+
+    it('should detect overlap when range contains point (reversed order)', () => {
+      expect(rangesOverlap({ start: 5, end: 10 }, { start: 7, end: 7 })).toBe(true);
+    });
+
+    it('should detect overlap when point at range start (reversed order)', () => {
+      expect(rangesOverlap({ start: 5, end: 10 }, { start: 5, end: 5 })).toBe(true);
+    });
+
+    it('should detect overlap when point at range end (reversed order)', () => {
+      expect(rangesOverlap({ start: 5, end: 10 }, { start: 10, end: 10 })).toBe(true);
+    });
+
+    it('should not overlap when point before range (reversed order)', () => {
+      expect(rangesOverlap({ start: 5, end: 10 }, { start: 4, end: 4 })).toBe(false);
+    });
+
+    it('should not overlap when point after range (reversed order)', () => {
+      expect(rangesOverlap({ start: 5, end: 10 }, { start: 11, end: 11 })).toBe(false);
+    });
+  });
+
+  describe('range overlaps', () => {
+    it('should detect full overlap (same range)', () => {
+      expect(rangesOverlap({ start: 5, end: 10 }, { start: 5, end: 10 })).toBe(true);
+    });
+
+    it('should detect overlap when one range contains another', () => {
+      expect(rangesOverlap({ start: 0, end: 20 }, { start: 5, end: 10 })).toBe(true);
+    });
+
+    it('should detect overlap when ranges partially overlap (a starts before b)', () => {
+      expect(rangesOverlap({ start: 0, end: 10 }, { start: 5, end: 15 })).toBe(true);
+    });
+
+    it('should detect overlap when ranges partially overlap (b starts before a)', () => {
+      expect(rangesOverlap({ start: 5, end: 15 }, { start: 0, end: 10 })).toBe(true);
+    });
+
+    it('should not overlap when ranges are adjacent (a ends where b starts)', () => {
+      expect(rangesOverlap({ start: 0, end: 5 }, { start: 5, end: 10 })).toBe(false);
+    });
+
+    it('should not overlap when ranges are adjacent (b ends where a starts)', () => {
+      expect(rangesOverlap({ start: 5, end: 10 }, { start: 0, end: 5 })).toBe(false);
+    });
+
+    it('should not overlap when ranges are completely separate', () => {
+      expect(rangesOverlap({ start: 0, end: 5 }, { start: 10, end: 15 })).toBe(false);
+    });
+
+    it('should not overlap when ranges are completely separate (reversed)', () => {
+      expect(rangesOverlap({ start: 10, end: 15 }, { start: 0, end: 5 })).toBe(false);
+    });
+  });
+
+  describe('edge cases', () => {
+    it('should handle ranges at position 0', () => {
+      expect(rangesOverlap({ start: 0, end: 5 }, { start: 0, end: 3 })).toBe(true);
+    });
+
+    it('should handle point at position 0', () => {
+      expect(rangesOverlap({ start: 0, end: 0 }, { start: 0, end: 5 })).toBe(true);
+    });
+
+    it('should handle very large positions', () => {
+      expect(
+        rangesOverlap({ start: 1000000, end: 1000010 }, { start: 1000005, end: 1000015 })
+      ).toBe(true);
+    });
+
+    it('should handle single-character ranges', () => {
+      expect(rangesOverlap({ start: 5, end: 6 }, { start: 5, end: 6 })).toBe(true);
+    });
+
+    it('should not overlap single-character adjacent ranges', () => {
+      expect(rangesOverlap({ start: 5, end: 6 }, { start: 6, end: 7 })).toBe(false);
+    });
+
+    it('should detect overlap in single-character ranges at same position', () => {
+      expect(rangesOverlap({ start: 5, end: 6 }, { start: 5, end: 6 })).toBe(true);
+    });
+
+    it('should detect overlap when ranges share one character', () => {
+      // Range [5,7) and [6,8) share position 6
+      expect(rangesOverlap({ start: 5, end: 7 }, { start: 6, end: 8 })).toBe(true);
     });
   });
 });
