@@ -1,16 +1,12 @@
 import * as path from 'path';
 import { fileSystem } from '../fs/FileSystem.js';
 import { PATHS } from '../fs/paths.js';
+import { ReasoningEffort } from '../adapter/Adapter.js';
 
 /**
  * Agent type
  */
 export type AgentType = 'Arki' | 'Coder';
-
-/**
- * Reasoning effort
- */
-export type ReasoningEffort = 'low' | 'medium' | 'high';
 
 /**
  * Agent model configuration
