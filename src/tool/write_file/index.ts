@@ -18,7 +18,6 @@ TOOLS['write_file'] = new Tool({
     const content = args.content as string;
     try {
       const fullPath = path.resolve(workingDir, filePath);
-      await fs.mkdir(path.dirname(fullPath), { recursive: true });
       await fs.writeFile(fullPath, content, 'utf-8');
       return `File written successfully: ${filePath}`;
     } catch (error) {

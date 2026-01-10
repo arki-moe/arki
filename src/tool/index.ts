@@ -12,3 +12,6 @@ import './delete_text/index.js';
 import './flush_changes/index.js';
 import './cached_read_file/index.js';
 import './get_pending_changes/index.js';
+import './create_directory/index.js';
+import './delete_file/index.js';
+import './delete_directory/index.js';

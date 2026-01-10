@@ -66,16 +66,28 @@ describe('WriteFileTool', () => {
       expect(content).toBe('New content');
     });
 
-    it('should create parent directories if they do not exist', async () => {
+    it('should return error when parent directory does not exist', async () => {
       const result = await tool().run({
-        path: 'deep/nested/dir/file.txt',
+        path: 'nonexistent/dir/file.txt',
+        content: 'content',
+      });
+
+      expect(result.result).toContain('Failed to write file');
+      expect(result.isError).toBe(true);
+    });
+
+    it('should write to existing subdirectory', async () => {
+      await fs.mkdir(path.join(tempDir, 'subdir'));
+
+      const result = await tool().run({
+        path: 'subdir/file.txt',
         content: 'Nested content',
       });
 
-      expect(result.result).toBe('File written successfully: deep/nested/dir/file.txt');
+      expect(result.result).toBe('File written successfully: subdir/file.txt');
 
       const content = await fs.readFile(
-        path.join(tempDir, 'deep/nested/dir/file.txt'),
+        path.join(tempDir, 'subdir/file.txt'),
         'utf-8'
       );
       expect(content).toBe('Nested content');

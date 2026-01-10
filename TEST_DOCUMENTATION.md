@@ -914,6 +914,75 @@ Tests for listing pending operations not yet flushed to disk.
 | `should list delete operation` | Verifies DELETE operations are listed |
 | `should list multiple operations` | Verifies multiple operations are counted |
 
+### CreateDirectoryTool
+
+**File:** `test/tool/create_directory/index.test.ts`
+
+Tests for the directory creation tool.
+
+#### Properties Tests
+
+| Test Case | Description |
+|-----------|-------------|
+| `should have correct name` | Verifies tool name is 'create_directory' |
+| `should have correct required parameters` | Verifies path is required |
+
+#### Run Tests
+
+| Test Case | Description |
+|-----------|-------------|
+| `should create a directory` | Verifies creating a new directory |
+| `should create nested directories with recursive option` | Verifies recursive directory creation |
+| `should return error for nested directories without recursive` | Verifies error without recursive flag |
+| `should succeed if directory exists with recursive option` | Verifies idempotent with recursive |
+| `should return error if directory exists without recursive` | Verifies error for existing directory |
+
+### DeleteFileTool
+
+**File:** `test/tool/delete_file/index.test.ts`
+
+Tests for the file deletion tool.
+
+#### Properties Tests
+
+| Test Case | Description |
+|-----------|-------------|
+| `should have correct name` | Verifies tool name is 'delete_file' |
+| `should have correct required parameters` | Verifies path is required |
+
+#### Run Tests
+
+| Test Case | Description |
+|-----------|-------------|
+| `should delete a file` | Verifies deleting a file |
+| `should return error for non-existent file` | Verifies error for missing files |
+| `should return error when trying to delete a directory` | Verifies error with helpful message |
+| `should delete file in subdirectory` | Verifies deleting files in subdirectories |
+
+### DeleteDirectoryTool
+
+**File:** `test/tool/delete_directory/index.test.ts`
+
+Tests for the directory deletion tool.
+
+#### Properties Tests
+
+| Test Case | Description |
+|-----------|-------------|
+| `should have correct name` | Verifies tool name is 'delete_directory' |
+| `should have correct required parameters` | Verifies path is required |
+
+#### Run Tests
+
+| Test Case | Description |
+|-----------|-------------|
+| `should delete an empty directory` | Verifies deleting empty directories |
+| `should return error for non-empty directory without recursive` | Verifies error for non-empty |
+| `should delete non-empty directory with recursive option` | Verifies recursive deletion |
+| `should return error for non-existent directory` | Verifies error for missing directories |
+| `should return error when trying to delete a file` | Verifies error with helpful message |
+| `should delete nested directories with recursive` | Verifies deep recursive deletion |
+
 ---
 
 ## Initialization Tests
@@ -1056,7 +1125,10 @@ test/
 │   ├── delete_text/
 │   ├── flush_changes/
 │   ├── cached_read_file/
-│   └── get_pending_changes/
+│   ├── get_pending_changes/
+│   ├── create_directory/
+│   ├── delete_file/
+│   └── delete_directory/
 ├── e2e.test.ts          # End-to-end tests
 └── init-project.test.ts # Initialization tests
 ```

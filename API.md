@@ -57,7 +57,10 @@ arki/
 │   │   ├── delete_text/
 │   │   ├── flush_changes/
 │   │   ├── cached_read_file/
-│   │   └── get_pending_changes/
+│   │   ├── get_pending_changes/
+│   │   ├── create_directory/  # File system management tools
+│   │   ├── delete_file/
+│   │   └── delete_directory/
 │   ├── procedure/
 │   │   ├── Procedure.ts  # Procedure class definition
 │   │   ├── index.ts      # Procedure exports and registration
@@ -747,7 +750,7 @@ Read the manual exactly once per tool - do not skip it, and do not read it repea
 ### Built-in Tools
 
 - `read_file` - Read file content
-- `write_file` - Write to file
+- `write_file` - Write to file (does not create parent directories)
 - `list_directory` - List directory contents
 - `run_command` - Execute shell commands
 - `read_tool_manual` - View detailed usage instructions for tools
@@ -758,6 +761,9 @@ Read the manual exactly once per tool - do not skip it, and do not read it repea
 - `flush_changes` - Write staged changes to disk
 - `cached_read_file` - Read file with staged changes applied
 - `get_pending_changes` - List pending operations not yet written to disk
+- `create_directory` - Create a directory (with optional recursive parent creation)
+- `delete_file` - Delete a file
+- `delete_directory` - Delete a directory (with optional recursive deletion)
 
 ## Procedure System
 
