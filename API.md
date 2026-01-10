@@ -33,9 +33,8 @@ arki/
 │   │   ├── project.ts    # Project config initialization (trust prompt, copy template)
 │   │   └── loader.ts     # Config loading and merging
 │   ├── fs/
-│   │   ├── paths.ts      # OS detection, PATHS object, workingDir
-│   │   ├── file.ts       # File operations (read, write, exists)
-│   │   └── dir.ts        # Directory operations (copy, exists, mkdir)
+│   │   ├── FileSystem.ts # FileSystem singleton and file/directory operations
+│   │   └── paths.ts      # OS detection, PATHS object, workingDir
 │   ├── config/
 │   │   ├── arki/         # Global config template (copied to ~/.config/arki or %APPDATA%\arki)
 │   │   │   └── config.json
@@ -827,9 +826,41 @@ const allProcedures = Object.values(PROCEDURES);
 
 ## File System Utilities
 
-The `src/fs` module provides common file system operations, organized into three submodules:
+The `src/fs` module provides common file system operations through a `fileSystem` singleton:
 
-### paths.ts - Path and OS Utilities
+### File Operations
+
+```typescript
+import { fileSystem } from 'arki';
+
+// Check if file exists (returns false for directories)
+const exists = await fileSystem.fileExists('/path/to/file.txt');
+
+// Read/write text files (readFile returns null if not found)
+const content = await fileSystem.readFile('/path/to/file.txt');
+await fileSystem.writeFile('/path/to/file.txt', 'content');
+
+// Read/write JSON files (readJsonFile returns null if not found or invalid)
+const data = await fileSystem.readJsonFile<MyType>('/path/to/data.json');
+await fileSystem.writeJsonFile('/path/to/data.json', { key: 'value' });  // Pretty formatted
+```
+
+### Directory Operations
+
+```typescript
+import { fileSystem } from 'arki';
+
+// Check if directory exists (returns false for files)
+const exists = await fileSystem.dirExists('/path/to/dir');
+
+// Create directory recursively (no error if exists)
+await fileSystem.mkdir('/path/to/new/dir');
+
+// Copy directory recursively (creates dest if not exists)
+await fileSystem.copyDir('/src/path', '/dest/path');
+```
+
+### Path and OS Utilities
 
 ```typescript
 import { OS, PATHS, workingDir, setWorkingDir } from 'arki';
@@ -847,38 +878,6 @@ console.log(PATHS.projectTemplate);  // Package's config/.arki template
 // Working directory management
 console.log(workingDir);             // Current working directory
 setWorkingDir('/new/path');          // Change working directory
-```
-
-### file.ts - File Operations
-
-```typescript
-import { fileExists, readFile, writeFile, readJsonFile, writeJsonFile } from 'arki';
-
-// Check if file exists (returns false for directories)
-const exists = await fileExists('/path/to/file.txt');
-
-// Read/write text files (readFile returns null if not found)
-const content = await readFile('/path/to/file.txt');
-await writeFile('/path/to/file.txt', 'content');
-
-// Read/write JSON files (readJsonFile returns null if not found or invalid)
-const data = await readJsonFile<MyType>('/path/to/data.json');
-await writeJsonFile('/path/to/data.json', { key: 'value' });  // Pretty formatted
-```
-
-### dir.ts - Directory Operations
-
-```typescript
-import { dirExists, mkdir, copyDir } from 'arki';
-
-// Check if directory exists (returns false for files)
-const exists = await dirExists('/path/to/dir');
-
-// Create directory recursively (no error if exists)
-await mkdir('/path/to/new/dir');
-
-// Copy directory recursively (creates dest if not exists)
-await copyDir('/src/path', '/dest/path');
 ```
 
 ## Logging Utilities

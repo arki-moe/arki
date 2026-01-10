@@ -2,9 +2,9 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import * as os from 'os';
-import { copyDir, dirExists, mkdir } from '../../src/fs/dir.js';
+import { fileSystem } from '../../src/fs/FileSystem.js';
 
-describe('dir', () => {
+describe('FileSystem - directory operations', () => {
   let tempDir: string;
 
   beforeEach(async () => {
@@ -20,20 +20,20 @@ describe('dir', () => {
       const dirPath = path.join(tempDir, 'subdir');
       await fs.mkdir(dirPath);
 
-      expect(await dirExists(dirPath)).toBe(true);
+      expect(await fileSystem.dirExists(dirPath)).toBe(true);
     });
 
     it('should return false for non-existent directory', async () => {
       const dirPath = path.join(tempDir, 'nonexistent');
 
-      expect(await dirExists(dirPath)).toBe(false);
+      expect(await fileSystem.dirExists(dirPath)).toBe(false);
     });
 
     it('should return false for file', async () => {
       const filePath = path.join(tempDir, 'file.txt');
       await fs.writeFile(filePath, 'content');
 
-      expect(await dirExists(filePath)).toBe(false);
+      expect(await fileSystem.dirExists(filePath)).toBe(false);
     });
   });
 
@@ -41,24 +41,24 @@ describe('dir', () => {
     it('should create directory', async () => {
       const dirPath = path.join(tempDir, 'newdir');
 
-      await mkdir(dirPath);
+      await fileSystem.mkdir(dirPath);
 
-      expect(await dirExists(dirPath)).toBe(true);
+      expect(await fileSystem.dirExists(dirPath)).toBe(true);
     });
 
     it('should create nested directories', async () => {
       const dirPath = path.join(tempDir, 'level1', 'level2', 'level3');
 
-      await mkdir(dirPath);
+      await fileSystem.mkdir(dirPath);
 
-      expect(await dirExists(dirPath)).toBe(true);
+      expect(await fileSystem.dirExists(dirPath)).toBe(true);
     });
 
     it('should not throw if directory already exists', async () => {
       const dirPath = path.join(tempDir, 'existing');
       await fs.mkdir(dirPath);
 
-      await expect(mkdir(dirPath)).resolves.not.toThrow();
+      await expect(fileSystem.mkdir(dirPath)).resolves.not.toThrow();
     });
   });
 
@@ -71,9 +71,9 @@ describe('dir', () => {
       await fs.writeFile(path.join(srcDir, 'file1.txt'), 'content1');
       await fs.writeFile(path.join(srcDir, 'file2.txt'), 'content2');
 
-      await copyDir(srcDir, destDir);
+      await fileSystem.copyDir(srcDir, destDir);
 
-      expect(await dirExists(destDir)).toBe(true);
+      expect(await fileSystem.dirExists(destDir)).toBe(true);
       const content1 = await fs.readFile(path.join(destDir, 'file1.txt'), 'utf-8');
       const content2 = await fs.readFile(path.join(destDir, 'file2.txt'), 'utf-8');
       expect(content1).toBe('content1');
@@ -88,9 +88,9 @@ describe('dir', () => {
       await fs.writeFile(path.join(srcDir, 'root.txt'), 'root');
       await fs.writeFile(path.join(srcDir, 'subdir', 'nested.txt'), 'nested');
 
-      await copyDir(srcDir, destDir);
+      await fileSystem.copyDir(srcDir, destDir);
 
-      expect(await dirExists(path.join(destDir, 'subdir'))).toBe(true);
+      expect(await fileSystem.dirExists(path.join(destDir, 'subdir'))).toBe(true);
       const rootContent = await fs.readFile(path.join(destDir, 'root.txt'), 'utf-8');
       const nestedContent = await fs.readFile(path.join(destDir, 'subdir', 'nested.txt'), 'utf-8');
       expect(rootContent).toBe('root');
@@ -103,9 +103,9 @@ describe('dir', () => {
 
       await fs.mkdir(srcDir);
 
-      await copyDir(srcDir, destDir);
+      await fileSystem.copyDir(srcDir, destDir);
 
-      expect(await dirExists(destDir)).toBe(true);
+      expect(await fileSystem.dirExists(destDir)).toBe(true);
       const entries = await fs.readdir(destDir);
       expect(entries).toHaveLength(0);
     });
@@ -117,7 +117,7 @@ describe('dir', () => {
       await fs.mkdir(path.join(srcDir, 'a', 'b', 'c'), { recursive: true });
       await fs.writeFile(path.join(srcDir, 'a', 'b', 'c', 'deep.txt'), 'deep content');
 
-      await copyDir(srcDir, destDir);
+      await fileSystem.copyDir(srcDir, destDir);
 
       const content = await fs.readFile(path.join(destDir, 'a', 'b', 'c', 'deep.txt'), 'utf-8');
       expect(content).toBe('deep content');
@@ -131,7 +131,7 @@ describe('dir', () => {
       const binaryContent = Buffer.from([0x00, 0x01, 0x02, 0xff]);
       await fs.writeFile(path.join(srcDir, 'binary.bin'), binaryContent);
 
-      await copyDir(srcDir, destDir);
+      await fileSystem.copyDir(srcDir, destDir);
 
       const copiedContent = await fs.readFile(path.join(destDir, 'binary.bin'));
       expect(copiedContent).toEqual(binaryContent);
@@ -144,9 +144,9 @@ describe('dir', () => {
       await fs.mkdir(srcDir);
       await fs.writeFile(path.join(srcDir, 'file.txt'), 'content');
 
-      await copyDir(srcDir, destDir);
+      await fileSystem.copyDir(srcDir, destDir);
 
-      expect(await dirExists(destDir)).toBe(true);
+      expect(await fileSystem.dirExists(destDir)).toBe(true);
     });
   });
 });

@@ -1,6 +1,6 @@
 import * as readline from 'readline';
+import { fileSystem } from '../fs/FileSystem.js';
 import { PATHS, workingDir } from '../fs/paths.js';
-import { copyDir, dirExists } from '../fs/dir.js';
 import { print, convertColorTags } from '../log/index.js';
 
 /**
@@ -30,7 +30,7 @@ async function askQuestion(question: string): Promise<boolean> {
 export async function initProject(forceInit?: boolean): Promise<void> {
   const projectConfigDir = PATHS.projectConfig;
 
-  if (await dirExists(projectConfigDir)) {
+  if (await fileSystem.dirExists(projectConfigDir)) {
     return;
   }
 
@@ -48,7 +48,7 @@ export async function initProject(forceInit?: boolean): Promise<void> {
   }
 
   // Copy project config template
-  await copyDir(PATHS.projectTemplate, projectConfigDir);
+  await fileSystem.copyDir(PATHS.projectTemplate, projectConfigDir);
 
   print('<green>Project configuration initialized.</green>');
 }

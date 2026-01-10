@@ -2,8 +2,8 @@ import { Tool } from '../tool/Tool.js';
 import { Procedure } from '../procedure/Procedure.js';
 import { Adapter } from '../adapter/Adapter.js';
 import { OpenAIAdapter } from '../adapter/openai.js';
+import { fileSystem } from '../fs/FileSystem.js';
 import { PATHS } from '../fs/paths.js';
-import { copyDir, dirExists } from '../fs/dir.js';
 
 /** Global tool registry */
 export const TOOLS: Record<string, Tool> = {};
@@ -32,8 +32,8 @@ export function getAdapter(platform: string): Adapter {
  */
 async function initGlobalConfig(): Promise<void> {
   const globalConfigDir = PATHS.globalConfig;
-  if (await dirExists(globalConfigDir)) return;
-  await copyDir(PATHS.globalTemplate, globalConfigDir);
+  if (await fileSystem.dirExists(globalConfigDir)) return;
+  await fileSystem.copyDir(PATHS.globalTemplate, globalConfigDir);
 }
 
 /**

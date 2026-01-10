@@ -1,6 +1,6 @@
 import * as path from 'path';
+import { fileSystem } from '../fs/FileSystem.js';
 import { PATHS } from '../fs/paths.js';
-import { readJsonFile, writeJsonFile } from '../fs/file.js';
 
 /**
  * Agent type
@@ -71,7 +71,7 @@ export async function loadConfigs(): Promise<GlobalConfig> {
 
   // Load global config
   const globalConfigPath = path.join(PATHS.globalConfig, 'config.json');
-  const globalConfig = await readJsonFile<GlobalConfig>(globalConfigPath);
+  const globalConfig = await fileSystem.readJsonFile<GlobalConfig>(globalConfigPath);
 
   if (!globalConfig) {
     throw new Error(`Failed to load global config: ${globalConfigPath}`);
@@ -79,7 +79,7 @@ export async function loadConfigs(): Promise<GlobalConfig> {
 
   // Load project config (optional)
   const projectConfigPath = path.join(PATHS.projectConfig, 'config.json');
-  const projectConfig = await readJsonFile<Partial<GlobalConfig>>(projectConfigPath);
+  const projectConfig = await fileSystem.readJsonFile<Partial<GlobalConfig>>(projectConfigPath);
 
   // Merge configs
   if (projectConfig) {
@@ -131,5 +131,5 @@ export function getAgentConfig(agentType: AgentType): AgentModelConfig {
 export async function saveConfig(): Promise<void> {
   const config = getConfig();
   const configPath = path.join(PATHS.globalConfig, 'config.json');
-  await writeJsonFile(configPath, config);
+  await fileSystem.writeJsonFile(configPath, config);
 }

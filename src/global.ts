@@ -1,4 +1,5 @@
 // Re-export from fs module
+export { fileSystem } from './fs/FileSystem.js';
 export { OS, PATHS, workingDir, setWorkingDir, type OS_TYPE } from './fs/paths.js';
 
 // Re-export from init/global module

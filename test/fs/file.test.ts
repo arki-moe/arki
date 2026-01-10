@@ -2,9 +2,9 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import * as os from 'os';
-import { fileExists, readJsonFile, writeJsonFile, readFile, writeFile } from '../../src/fs/file.js';
+import { fileSystem } from '../../src/fs/FileSystem.js';
 
-describe('file', () => {
+describe('FileSystem - file operations', () => {
   let tempDir: string;
 
   beforeEach(async () => {
@@ -20,20 +20,20 @@ describe('file', () => {
       const filePath = path.join(tempDir, 'test.txt');
       await fs.writeFile(filePath, 'content');
 
-      expect(await fileExists(filePath)).toBe(true);
+      expect(await fileSystem.fileExists(filePath)).toBe(true);
     });
 
     it('should return false for non-existent file', async () => {
       const filePath = path.join(tempDir, 'nonexistent.txt');
 
-      expect(await fileExists(filePath)).toBe(false);
+      expect(await fileSystem.fileExists(filePath)).toBe(false);
     });
 
     it('should return false for directory', async () => {
       const dirPath = path.join(tempDir, 'subdir');
       await fs.mkdir(dirPath);
 
-      expect(await fileExists(dirPath)).toBe(false);
+      expect(await fileSystem.fileExists(dirPath)).toBe(false);
     });
   });
 
@@ -42,7 +42,7 @@ describe('file', () => {
       const filePath = path.join(tempDir, 'test.txt');
       await fs.writeFile(filePath, 'Hello, World!');
 
-      const content = await readFile(filePath);
+      const content = await fileSystem.readFile(filePath);
 
       expect(content).toBe('Hello, World!');
     });
@@ -50,7 +50,7 @@ describe('file', () => {
     it('should return null for non-existent file', async () => {
       const filePath = path.join(tempDir, 'nonexistent.txt');
 
-      const content = await readFile(filePath);
+      const content = await fileSystem.readFile(filePath);
 
       expect(content).toBeNull();
     });
@@ -59,7 +59,7 @@ describe('file', () => {
       const filePath = path.join(tempDir, 'empty.txt');
       await fs.writeFile(filePath, '');
 
-      const content = await readFile(filePath);
+      const content = await fileSystem.readFile(filePath);
 
       expect(content).toBe('');
     });
@@ -68,7 +68,7 @@ describe('file', () => {
       const filePath = path.join(tempDir, 'multiline.txt');
       await fs.writeFile(filePath, 'Line 1\nLine 2\nLine 3');
 
-      const content = await readFile(filePath);
+      const content = await fileSystem.readFile(filePath);
 
       expect(content).toBe('Line 1\nLine 2\nLine 3');
     });
@@ -77,7 +77,7 @@ describe('file', () => {
       const filePath = path.join(tempDir, 'unicode.txt');
       await fs.writeFile(filePath, 'Hello 🌍 World');
 
-      const content = await readFile(filePath);
+      const content = await fileSystem.readFile(filePath);
 
       expect(content).toBe('Hello 🌍 World');
     });
@@ -87,7 +87,7 @@ describe('file', () => {
     it('should write content to file', async () => {
       const filePath = path.join(tempDir, 'output.txt');
 
-      await writeFile(filePath, 'Test content');
+      await fileSystem.writeFile(filePath, 'Test content');
 
       const content = await fs.readFile(filePath, 'utf-8');
       expect(content).toBe('Test content');
@@ -97,7 +97,7 @@ describe('file', () => {
       const filePath = path.join(tempDir, 'overwrite.txt');
       await fs.writeFile(filePath, 'Original');
 
-      await writeFile(filePath, 'Updated');
+      await fileSystem.writeFile(filePath, 'Updated');
 
       const content = await fs.readFile(filePath, 'utf-8');
       expect(content).toBe('Updated');
@@ -106,7 +106,7 @@ describe('file', () => {
     it('should write empty content', async () => {
       const filePath = path.join(tempDir, 'empty.txt');
 
-      await writeFile(filePath, '');
+      await fileSystem.writeFile(filePath, '');
 
       const content = await fs.readFile(filePath, 'utf-8');
       expect(content).toBe('');
@@ -118,7 +118,7 @@ describe('file', () => {
       const filePath = path.join(tempDir, 'data.json');
       await fs.writeFile(filePath, '{"name": "test", "value": 123}');
 
-      const data = await readJsonFile<{ name: string; value: number }>(filePath);
+      const data = await fileSystem.readJsonFile<{ name: string; value: number }>(filePath);
 
       expect(data).toEqual({ name: 'test', value: 123 });
     });
@@ -126,7 +126,7 @@ describe('file', () => {
     it('should return null for non-existent file', async () => {
       const filePath = path.join(tempDir, 'nonexistent.json');
 
-      const data = await readJsonFile(filePath);
+      const data = await fileSystem.readJsonFile(filePath);
 
       expect(data).toBeNull();
     });
@@ -135,7 +135,7 @@ describe('file', () => {
       const filePath = path.join(tempDir, 'invalid.json');
       await fs.writeFile(filePath, 'not valid json');
 
-      const data = await readJsonFile(filePath);
+      const data = await fileSystem.readJsonFile(filePath);
 
       expect(data).toBeNull();
     });
@@ -144,7 +144,7 @@ describe('file', () => {
       const filePath = path.join(tempDir, 'array.json');
       await fs.writeFile(filePath, '[1, 2, 3]');
 
-      const data = await readJsonFile<number[]>(filePath);
+      const data = await fileSystem.readJsonFile<number[]>(filePath);
 
       expect(data).toEqual([1, 2, 3]);
     });
@@ -153,7 +153,7 @@ describe('file', () => {
       const filePath = path.join(tempDir, 'nested.json');
       await fs.writeFile(filePath, '{"outer": {"inner": "value"}}');
 
-      const data = await readJsonFile<{ outer: { inner: string } }>(filePath);
+      const data = await fileSystem.readJsonFile<{ outer: { inner: string } }>(filePath);
 
       expect(data).toEqual({ outer: { inner: 'value' } });
     });
@@ -164,7 +164,7 @@ describe('file', () => {
       const filePath = path.join(tempDir, 'output.json');
       const data = { name: 'test', value: 123 };
 
-      await writeJsonFile(filePath, data);
+      await fileSystem.writeJsonFile(filePath, data);
 
       const content = await fs.readFile(filePath, 'utf-8');
       expect(content).toBe('{\n  "name": "test",\n  "value": 123\n}');
@@ -173,7 +173,7 @@ describe('file', () => {
     it('should write array JSON', async () => {
       const filePath = path.join(tempDir, 'array.json');
 
-      await writeJsonFile(filePath, [1, 2, 3]);
+      await fileSystem.writeJsonFile(filePath, [1, 2, 3]);
 
       const content = await fs.readFile(filePath, 'utf-8');
       expect(content).toBe('[\n  1,\n  2,\n  3\n]');
@@ -183,16 +183,16 @@ describe('file', () => {
       const filePath = path.join(tempDir, 'overwrite.json');
       await fs.writeFile(filePath, '{"old": "data"}');
 
-      await writeJsonFile(filePath, { new: 'data' });
+      await fileSystem.writeJsonFile(filePath, { new: 'data' });
 
-      const data = await readJsonFile<{ new: string }>(filePath);
+      const data = await fileSystem.readJsonFile<{ new: string }>(filePath);
       expect(data).toEqual({ new: 'data' });
     });
 
     it('should handle null and undefined values', async () => {
       const filePath = path.join(tempDir, 'nullable.json');
 
-      await writeJsonFile(filePath, { a: null, b: undefined });
+      await fileSystem.writeJsonFile(filePath, { a: null, b: undefined });
 
       const content = await fs.readFile(filePath, 'utf-8');
       // undefined is omitted in JSON
