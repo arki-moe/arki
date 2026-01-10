@@ -26,6 +26,5 @@ describe('initProject', () => {
 
     await expect(fs.stat(PATHS.projectConfig)).resolves.toBeDefined();
     await expect(fs.stat(path.join(PATHS.projectConfig, 'config.json'))).resolves.toBeDefined();
-    await expect(fs.stat(path.join(PATHS.projectConfig, 'state.json'))).resolves.toBeDefined();
   });
 });

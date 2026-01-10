@@ -97,7 +97,6 @@ On first run, Arki copies the default configuration template to this location.
 Each project can have its own configuration in `.arki/` directory:
 
 - `.arki/config.json` - Project-specific settings (overrides global config)
-- `.arki/state.json` - Project state and cache
 
 On first run in a new project, Arki will ask if you trust the project before initializing the `.arki/` directory.
 Use `--init` to skip the prompt in non-interactive environments.

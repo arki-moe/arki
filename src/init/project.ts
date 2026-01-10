@@ -1,6 +1,5 @@
-import * as path from 'path';
 import * as readline from 'readline';
-import { PATHS, workingDir, copyDir, dirExists, writeJsonFile } from '../fs/index.js';
+import { PATHS, workingDir, copyDir, dirExists } from '../fs/index.js';
 import { print, convertColorTags } from '../log/index.js';
 
 /**
@@ -49,14 +48,6 @@ export async function initProject(forceInit?: boolean): Promise<void> {
 
   // Copy project config template
   await copyDir(PATHS.projectTemplate, projectConfigDir);
-
-  // Update state.json with creation time
-  const statePath = path.join(projectConfigDir, 'state.json');
-  const state = {
-    initialized: true,
-    createdAt: new Date().toISOString(),
-  };
-  await writeJsonFile(statePath, state);
 
   print('<green>Project configuration initialized.</green>');
 }

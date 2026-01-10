@@ -46,8 +46,7 @@ arki/
 │   │   ├── arki/         # Global config template (copied to ~/.config/arki or %APPDATA%\arki)
 │   │   │   └── config.json
 │   │   └── .arki/        # Project config template (copied to project/.arki)
-│   │       ├── config.json
-│   │       └── state.json
+│   │       └── config.json
 │   ├── tool/
 │   │   ├── Tool.ts       # Tool class definition
 │   │   ├── index.ts      # Tool exports and registration
