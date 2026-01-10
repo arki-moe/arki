@@ -5,7 +5,8 @@ import * as os from 'os';
 import { OpenAIAdapter } from '../src/adapter/openai.js';
 import { Agent } from '../src/agent/Agent.js';
 import { MsgType, SystemMsg, UserMsg } from '../src/agent/Msg.js';
-import { TOOLS, workingDir, setWorkingDir } from '../src/global.js';
+import { TOOLS } from '../src/global.js';
+import { workingDir, setWorkingDir } from '../src/fs/paths.js';
 
 import '../src/tool/index.js';
 

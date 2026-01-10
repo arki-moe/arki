@@ -4,7 +4,10 @@ import * as readline from 'readline';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
-import { init, getAgentConfig, TOOLS, PROCEDURES, workingDir, OS } from './global.js';
+import { TOOLS, PROCEDURES } from './global.js';
+import { workingDir, OS } from './fs/paths.js';
+import { init } from './init/init.js';
+import { getAgentConfig } from './init/loader.js';
 import './tool/index.js';
 import './procedure/index.js';
 import { setDebugMode, isDebugMode, debug, log, print, error, formatNumber, convertColorTags, getTimestamp, createColorConverter } from './log/index.js';
@@ -253,6 +256,10 @@ async function main() {
 }
 
 export * from './global.js';
+export * from './fs/FileSystem.js';
+export * from './fs/paths.js';
+export * from './init/init.js';
+export * from './init/loader.js';
 export * from './log/index.js';
 export * from './agent/Msg.js';
 export * from './adapter/Adapter.js';

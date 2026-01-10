@@ -1,29 +1,7 @@
-import { Tool } from '../tool/Tool.js';
-import { Procedure } from '../procedure/Procedure.js';
-import { Adapter } from '../adapter/Adapter.js';
 import { OpenAIAdapter } from '../adapter/openai.js';
 import { fileSystem } from '../fs/FileSystem.js';
 import { PATHS } from '../fs/paths.js';
-
-/** Global tool registry */
-export const TOOLS: Record<string, Tool> = {};
-
-/** Global procedure registry */
-export const PROCEDURES: Record<string, Procedure> = {};
-
-/** Global adapter registry by platform */
-export const adapters: Record<string, Adapter> = {};
-
-/**
- * Get adapter by platform name
- */
-export function getAdapter(platform: string): Adapter {
-  const adapter = adapters[platform];
-  if (!adapter) {
-    throw new Error(`Adapter not found for platform: ${platform}`);
-  }
-  return adapter;
-}
+import { ADAPTERS } from '../global.js';
 
 /**
  * Initialize global configuration
@@ -45,13 +23,13 @@ async function initAdapters(): Promise<void> {
   // Initialize OpenAI adapter if API key is available
   const openaiKey = getApiKey('openai');
   if (openaiKey) {
-    adapters['openai'] = new OpenAIAdapter(openaiKey);
+    ADAPTERS['openai'] = new OpenAIAdapter(openaiKey);
   }
 
   // Future: Add more adapters here
   // const anthropicKey = getApiKey('anthropic');
   // if (anthropicKey) {
-  //   adapters['anthropic'] = new AnthropicAdapter(anthropicKey);
+  //   ADAPTERS['anthropic'] = new AnthropicAdapter(anthropicKey);
   // }
 }
 

@@ -3,7 +3,7 @@ import * as fs from 'fs/promises';
 import * as os from 'os';
 import * as path from 'path';
 import { initProject } from '../src/init/project.js';
-import { setWorkingDir, workingDir, PATHS } from '../src/global.js';
+import { setWorkingDir, workingDir, PATHS } from '../src/fs/paths.js';
 
 describe('initProject', () => {
   let tempDir: string;

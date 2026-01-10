@@ -8,7 +8,7 @@ This documentation is for developers and LLMs, containing complete API reference
 arki/
 ├── src/
 │   ├── index.ts          # CLI entry + library exports
-│   ├── global.ts         # Re-exports from fs and init modules
+│   ├── global.ts         # Global registries (TOOLS, PROCEDURES, ADAPTERS, AGENTS)
 │   ├── log/
 │   │   ├── index.ts      # Color definitions, XML tag conversion, and export entry
 │   │   ├── debug.ts      # Debug mode and logging
@@ -29,7 +29,7 @@ arki/
 │   │   ├── index.ts      # Type definitions and exports
 │   │   └── models.ts     # Model configuration data (MODELS)
 │   ├── init/
-│   │   ├── global.ts     # Global state (TOOLS, PROCEDURES, adapters registry) and init function
+│   │   ├── init.ts       # init() function for global state initialization
 │   │   ├── project.ts    # Project config initialization (trust prompt, copy template)
 │   │   └── loader.ts     # Config loading and merging
 │   ├── fs/
@@ -307,12 +307,12 @@ const systemInstruction = Agent.renderTemplate(systemTemplate, {
 });
 
 // Method 1: Use global adapters registry (recommended, initialized via init())
-import { getAdapter, getAgentConfig, init, TOOLS, MODELS } from 'arki';
+import { ADAPTERS, TOOLS, MODELS, init, getAgentConfig } from 'arki';
 
 await init();
 const config = getAgentConfig('arki');
 const model = MODELS[config.model];
-const adapter = getAdapter(model.provider);
+const adapter = ADAPTERS[model.provider];
 
 const agent = new Agent({
   name: 'MyAgent',
@@ -534,7 +534,8 @@ Tools are defined using the `Tool` class and managed through the global `TOOLS` 
 ```typescript
 // src/tool/my_tool/index.ts
 import { Tool } from '../Tool.js';
-import { TOOLS, workingDir } from '../../global.js';
+import { TOOLS } from '../../global.js';
+import { workingDir } from '../../fs/paths.js';  // Or from '../../global.js' if re-exported
 import manualContent from './manual.md';  // Inlined as string at build time
 
 // Register tool to global TOOLS
@@ -679,19 +680,17 @@ const allTools = Object.values(TOOLS);
 Adapters are stored in a global registry by platform name, automatically initialized at `init()`:
 
 ```typescript
-import { adapters, getAdapter, init } from 'arki';
+import { ADAPTERS, init } from 'arki';
 
 // Initialize global state (including adapters based on available API keys)
 await init();
 
-// Get adapter by platform name
-const openaiAdapter = getAdapter('openai');
-
-// Or access the registry directly
-console.log('Available adapters:', Object.keys(adapters));
+// Access the registry directly
+const openaiAdapter = ADAPTERS['openai'];
+console.log('Available adapters:', Object.keys(ADAPTERS));
 ```
 
-Adapters are only initialized for platforms that have API keys configured in environment variables. The `getAdapter()` function throws if the requested platform's adapter is not available.
+Adapters are only initialized for platforms that have API keys configured in environment variables.
 
 #### Initialization Flow
 
@@ -714,14 +713,12 @@ The `init()` function performs three initialization steps:
 API keys are read directly from environment variables via `getApiKey()`.
 
 ```typescript
-import { init } from 'arki';
+import { init, getConfig, getApiKey, getAgentConfig } from 'arki';
 
 // Initialize with optional working directory
 await init('/path/to/project');
 
 // After init, configs are loaded and adapter is ready
-import { getConfig, getApiKey, getAgentConfig } from 'arki';
-
 const config = getConfig();
 const apiKey = getApiKey('openai');
 const arkiConfig = getAgentConfig('arki');

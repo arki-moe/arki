@@ -2,7 +2,8 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import * as os from 'os';
-import { TOOLS, workingDir, setWorkingDir } from '../../../src/global.js';
+import { TOOLS } from '../../../src/global.js';
+import { workingDir, setWorkingDir } from '../../../src/fs/paths.js';
 
 import '../../../src/tool/list_directory/index.js';
 

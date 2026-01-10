@@ -1,6 +1,8 @@
 import { Agent } from '../Agent.js';
 import { SystemMsg } from '../Msg.js';
-import { getAdapter, workingDir, PROCEDURES, TOOLS, getAgentConfig } from '../../global.js';
+import { ADAPTERS, PROCEDURES, TOOLS } from '../../global.js';
+import { workingDir } from '../../fs/paths.js';
+import { getAgentConfig } from '../../init/loader.js';
 import { MODELS } from '../../model/index.js';
 import { HAS_MANUAL } from '../../tool/Tool.js';
 import systemPromptTemplate from './system.md';
@@ -30,7 +32,10 @@ export function createArkiAgent(): Agent {
   if (!model) {
     throw new Error(`Unknown model: ${config.model}`);
   }
-  const adapter = getAdapter(model.provider);
+  const adapter = ADAPTERS[model.provider];
+  if (!adapter) {
+    throw new Error(`Adapter not found for platform: ${model.provider}`);
+  }
 
   // Get tools for this agent
   const tools = ARKI_TOOLS.map((name) => TOOLS[name]).filter(Boolean);

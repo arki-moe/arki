@@ -1,7 +1,8 @@
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import { Tool } from '../Tool.js';
-import { TOOLS, workingDir } from '../../global.js';
+import { TOOLS } from '../../global.js';
+import { workingDir } from '../../fs/paths.js';
 import manualContent from './manual.md';
 
 TOOLS['read_file'] = new Tool({
