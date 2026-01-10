@@ -9,7 +9,7 @@ TOOLS['read_tool_manual'] = new Tool({
   },
   required: ['tool_name'],
   manualContent,
-  execute: async (args) => {
+  execute: async (args, _context) => {
     const toolName = args.tool_name as string;
 
     const foundTool = TOOLS[toolName];

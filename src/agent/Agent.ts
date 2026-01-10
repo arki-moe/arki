@@ -243,7 +243,7 @@ export class Agent {
           tc.asyncCallId = asyncCallId;
 
           // Start async execution
-          const asyncPromise = tool.run(tc.arguments);
+          const asyncPromise = tool.run(tc.arguments, { agentId: this.name });
 
           // Store pending async tool
           this.pendingAsyncTools.set(asyncCallId, {
@@ -276,7 +276,7 @@ export class Agent {
         }
 
         // Handle sync tool
-        const result: ToolResult = await tool.run(tc.arguments);
+        const result: ToolResult = await tool.run(tc.arguments, { agentId: this.name });
 
         toolCallHistory.push({
           name: tc.name,

@@ -7,6 +7,14 @@ import type { ToolResult } from '../agent/Msg.js';
 export const HAS_MANUAL = '📘';
 
 /**
+ * Context passed to tool execution
+ */
+export interface ToolContext {
+  /** ID of the agent calling the tool */
+  agentId: string;
+}
+
+/**
  * Tool class
  */
 export class Tool {
@@ -17,14 +25,14 @@ export class Tool {
   readonly manual: string;
   /** Whether this tool is async (non-blocking, result via AsyncToolResultMsg) */
   readonly isAsync: boolean;
-  private readonly _execute: (args: Record<string, unknown>) => Promise<string | { content: string; isError?: boolean }>;
+  private readonly _execute: (args: Record<string, unknown>, context: ToolContext) => Promise<string | { content: string; isError?: boolean }>;
 
   constructor(config: {
     name: string;
     parameters: Record<string, unknown>;
     required: string[];
     manualContent: string;
-    execute: (args: Record<string, unknown>) => Promise<string | { content: string; isError?: boolean }>;
+    execute: (args: Record<string, unknown>, context: ToolContext) => Promise<string | { content: string; isError?: boolean }>;
     /** Whether this tool is async (default: false) */
     isAsync?: boolean;
   }) {
@@ -68,9 +76,9 @@ export class Tool {
   /**
    * Execute tool (with error handling and logging)
    */
-  async run(args: Record<string, unknown>): Promise<ToolResult> {
+  async run(args: Record<string, unknown>, context: ToolContext): Promise<ToolResult> {
     try {
-      const result = await this._execute(args);
+      const result = await this._execute(args, context);
 
       if (typeof result === 'string') {
         return { toolName: this.name, result };

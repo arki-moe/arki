@@ -1,0 +1,41 @@
+import * as path from 'path';
+import { Tool } from '../Tool.js';
+import { TOOLS } from '../../global.js';
+import { workingDir } from '../../fs/paths.js';
+import { cachedFileSystem, TargetNotFoundError, AmbiguousTargetError } from '../../fs/CachedFileSystem.js';
+import manualContent from './manual.md';
+
+TOOLS['insert_text'] = new Tool({
+  name: 'insert_text',
+  parameters: {
+    path: { type: 'string', description: 'File path' },
+    target: { type: 'string', description: 'Target string to locate (must be unique)' },
+    content: { type: 'string', description: 'Content to insert' },
+    position: { type: 'string', enum: ['before', 'after'], description: "Insert position: 'before' or 'after' target" },
+  },
+  required: ['path', 'target', 'content', 'position'],
+  manualContent,
+  execute: async (args, context) => {
+    const filePath = args.path as string;
+    const target = args.target as string;
+    const content = args.content as string;
+    const position = args.position as 'before' | 'after';
+
+    try {
+      const fullPath = path.resolve(workingDir, filePath);
+      await cachedFileSystem.insert(fullPath, target, content, position, context.agentId);
+      return `Content inserted ${position} target in ${filePath}. Use flush_changes to write to disk.`;
+    } catch (error) {
+      if (error instanceof TargetNotFoundError) {
+        return { content: `Target not found: "${target}" does not exist in ${filePath}`, isError: true };
+      }
+      if (error instanceof AmbiguousTargetError) {
+        return { content: `Ambiguous target: "${target}" appears multiple times in ${filePath}. Provide more context to make it unique.`, isError: true };
+      }
+      return {
+        content: `Failed to insert text: ${error instanceof Error ? error.message : String(error)}`,
+        isError: true,
+      };
+    }
+  },
+});

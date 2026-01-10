@@ -13,7 +13,7 @@ TOOLS['write_file'] = new Tool({
   },
   required: ['path', 'content'],
   manualContent,
-  execute: async (args) => {
+  execute: async (args, _context) => {
     const filePath = args.path as string;
     const content = args.content as string;
     try {

@@ -12,7 +12,7 @@ TOOLS['list_directory'] = new Tool({
   },
   required: [],
   manualContent,
-  execute: async (args) => {
+  execute: async (args, _context) => {
     const dirPath = (args.path as string) || '.';
     try {
       const fullPath = path.resolve(workingDir, dirPath);

@@ -9,7 +9,7 @@ TOOLS['read_procedure'] = new Tool({
   },
   required: ['procedure_name'],
   manualContent,
-  execute: async (args) => {
+  execute: async (args, _context) => {
     const procedureName = args.procedure_name as string;
     const procedure = PROCEDURES[procedureName];
 

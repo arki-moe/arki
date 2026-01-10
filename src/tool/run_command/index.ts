@@ -10,7 +10,7 @@ TOOLS['run_command'] = new Tool({
   },
   required: ['command'],
   manualContent,
-  execute: async (args) => {
+  execute: async (args, _context) => {
     const command = args.command as string;
     try {
       const { exec } = await import('child_process');

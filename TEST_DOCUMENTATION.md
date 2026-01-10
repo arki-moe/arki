@@ -785,6 +785,135 @@ Tests for the procedure reading tool.
 | `should list available procedures in error message` | Verifies helpful error with available options |
 | `should wrap result with toolName` | Verifies result includes tool name |
 
+### InsertTextTool
+
+**File:** `test/tool/insert_text/index.test.ts`
+
+Tests for the text insertion tool using CachedFileSystem.
+
+#### Properties Tests
+
+| Test Case | Description |
+|-----------|-------------|
+| `should have correct name` | Verifies tool name is 'insert_text' |
+| `should have correct required parameters` | Verifies path, target, content, position are required |
+
+#### Run Tests
+
+| Test Case | Description |
+|-----------|-------------|
+| `should insert content after target` | Verifies inserting content after a target string |
+| `should insert content before target` | Verifies inserting content before a target string |
+| `should return error for non-existent target` | Verifies error when target string not found |
+| `should return error for ambiguous target` | Verifies error when target appears multiple times |
+| `should return error for non-existent file` | Verifies error for missing files |
+
+### ReplaceTextTool
+
+**File:** `test/tool/replace_text/index.test.ts`
+
+Tests for the text replacement tool using CachedFileSystem.
+
+#### Properties Tests
+
+| Test Case | Description |
+|-----------|-------------|
+| `should have correct name` | Verifies tool name is 'replace_text' |
+| `should have correct required parameters` | Verifies path, target, new_content are required |
+
+#### Run Tests
+
+| Test Case | Description |
+|-----------|-------------|
+| `should replace target with new content` | Verifies replacing a target string |
+| `should return error for non-existent target` | Verifies error when target not found |
+| `should return error for ambiguous target` | Verifies error when target appears multiple times |
+
+### DeleteTextTool
+
+**File:** `test/tool/delete_text/index.test.ts`
+
+Tests for the text deletion tool using CachedFileSystem.
+
+#### Properties Tests
+
+| Test Case | Description |
+|-----------|-------------|
+| `should have correct name` | Verifies tool name is 'delete_text' |
+| `should have correct required parameters` | Verifies path, target are required |
+
+#### Run Tests
+
+| Test Case | Description |
+|-----------|-------------|
+| `should delete target from file` | Verifies deleting a target string |
+| `should return error for non-existent target` | Verifies error when target not found |
+| `should return error for ambiguous target` | Verifies error when target appears multiple times |
+
+### FlushChangesTool
+
+**File:** `test/tool/flush_changes/index.test.ts`
+
+Tests for the flush changes tool that writes staged operations to disk.
+
+#### Properties Tests
+
+| Test Case | Description |
+|-----------|-------------|
+| `should have correct name` | Verifies tool name is 'flush_changes' |
+| `should have no required parameters` | Verifies no required parameters |
+
+#### Run Tests
+
+| Test Case | Description |
+|-----------|-------------|
+| `should flush changes to disk` | Verifies staged changes are written to disk |
+| `should succeed with no pending changes` | Verifies success when no operations pending |
+
+### CachedReadFileTool
+
+**File:** `test/tool/cached_read_file/index.test.ts`
+
+Tests for reading files with staged changes applied.
+
+#### Properties Tests
+
+| Test Case | Description |
+|-----------|-------------|
+| `should have correct name` | Verifies tool name is 'cached_read_file' |
+| `should have correct required parameters` | Verifies path is required |
+
+#### Run Tests
+
+| Test Case | Description |
+|-----------|-------------|
+| `should read file content` | Verifies reading original file content |
+| `should read file with pending changes applied` | Verifies staged changes are visible |
+| `should return error for non-existent file` | Verifies error for missing files |
+
+### GetPendingChangesTool
+
+**File:** `test/tool/get_pending_changes/index.test.ts`
+
+Tests for listing pending operations not yet flushed to disk.
+
+#### Properties Tests
+
+| Test Case | Description |
+|-----------|-------------|
+| `should have correct name` | Verifies tool name is 'get_pending_changes' |
+| `should have no required parameters` | Verifies no required parameters |
+
+#### Run Tests
+
+| Test Case | Description |
+|-----------|-------------|
+| `should return no pending changes when empty` | Verifies message when no operations |
+| `should list insert operation` | Verifies INSERT operations are listed |
+| `should list replace operation` | Verifies REPLACE operations are listed |
+| `should list delete operation` | Verifies DELETE operations are listed |
+| `should list multiple operations` | Verifies multiple operations are counted |
+
 ---
 
 ## Initialization Tests
@@ -921,7 +1050,13 @@ test/
 │   ├── read_file/
 │   ├── read_procedure/
 │   ├── run_command/
-│   └── write_file/
+│   ├── write_file/
+│   ├── insert_text/
+│   ├── replace_text/
+│   ├── delete_text/
+│   ├── flush_changes/
+│   ├── cached_read_file/
+│   └── get_pending_changes/
 ├── e2e.test.ts          # End-to-end tests
 └── init-project.test.ts # Initialization tests
 ```

@@ -51,7 +51,13 @@ arki/
 │   │   ├── list_directory/
 │   │   ├── run_command/
 │   │   ├── read_tool_manual/
-│   │   └── read_procedure/
+│   │   ├── read_procedure/
+│   │   ├── insert_text/       # CachedFileSystem tools
+│   │   ├── replace_text/
+│   │   ├── delete_text/
+│   │   ├── flush_changes/
+│   │   ├── cached_read_file/
+│   │   └── get_pending_changes/
 │   ├── procedure/
 │   │   ├── Procedure.ts  # Procedure class definition
 │   │   ├── index.ts      # Procedure exports and registration
@@ -548,9 +554,9 @@ TOOLS['my_tool'] = new Tool({
   },
   required: ['param1'],         // Required parameters
   manualContent,                // manual.md content
-  execute: async (args) => {    // Execution function
+  execute: async (args, context) => {    // Execution function with context
     const param1 = args.param1 as string;
-    // Can use global workingDir when needed
+    // context.agentId contains the calling agent's name
     return `Execution result: ${param1}`;
   },
 });
@@ -561,6 +567,11 @@ TOOLS['my_tool'] = new Tool({
 ```typescript
 // Symbol indicating tool has detailed manual
 const HAS_MANUAL = '📘';
+
+// Context passed to tool execution (injected by Agent)
+interface ToolContext {
+  agentId: string;  // Name of the agent calling the tool
+}
 
 class Tool {
   readonly name: string;
@@ -575,12 +586,12 @@ class Tool {
     parameters: Record<string, unknown>;
     required: string[];
     manualContent: string;
-    execute: (args: Record<string, unknown>) => Promise<string | { content: string; isError?: boolean }>;
+    execute: (args: Record<string, unknown>, context: ToolContext) => Promise<string | { content: string; isError?: boolean }>;
     isAsync?: boolean;               // Default: false
   });
 
   static parseManual(content: string): { description: string; manual: string };
-  async run(args: Record<string, unknown>): Promise<ToolResult>;  // Returns single ToolResult
+  async run(args: Record<string, unknown>, context: ToolContext): Promise<ToolResult>;  // Returns single ToolResult
 }
 ```
 
@@ -741,6 +752,12 @@ Read the manual exactly once per tool - do not skip it, and do not read it repea
 - `run_command` - Execute shell commands
 - `read_tool_manual` - View detailed usage instructions for tools
 - `read_procedure` - View step-by-step procedure for specific workflows
+- `insert_text` - Insert content before/after a target string (uses CachedFileSystem)
+- `replace_text` - Replace a target string with new content (uses CachedFileSystem)
+- `delete_text` - Delete a target string from a file (uses CachedFileSystem)
+- `flush_changes` - Write staged changes to disk
+- `cached_read_file` - Read file with staged changes applied
+- `get_pending_changes` - List pending operations not yet written to disk
 
 ## Procedure System
 
