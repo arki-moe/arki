@@ -33,8 +33,9 @@ arki/
 │   │   ├── project.ts    # Project config initialization (trust prompt, copy template)
 │   │   └── loader.ts     # Config loading and merging
 │   ├── fs/
-│   │   ├── FileSystem.ts # FileSystem singleton and file/directory operations
-│   │   └── paths.ts      # OS detection, PATHS object, workingDir
+│   │   ├── FileSystem.ts       # FileSystem singleton and file/directory operations
+│   │   ├── CachedFileSystem.ts # Operation-based cached file system with conflict detection
+│   │   └── paths.ts            # OS detection, PATHS object, workingDir
 │   ├── config/
 │   │   ├── arki/         # Global config template (copied to ~/.config/arki or %APPDATA%\arki)
 │   │   │   └── config.json
@@ -875,6 +876,135 @@ console.log(PATHS.projectTemplate);  // Package's config/.arki template
 // Working directory management
 console.log(workingDir);             // Current working directory
 setWorkingDir('/new/path');          // Change working directory
+```
+
+### CachedFileSystem
+
+The `CachedFileSystem` class provides operation-based file editing with per-agent tracking, Git-style conflict detection, and lazy flushing:
+
+```typescript
+import { 
+  CachedFileSystem, 
+  cachedFileSystem,
+  TargetNotFoundError,
+  AmbiguousTargetError,
+  ConflictError,
+  FileOperation,
+  Conflict,
+  Annotation
+} from 'arki';
+
+// Use the singleton or create a new instance
+const cfs = cachedFileSystem;
+// or: const cfs = new CachedFileSystem();
+```
+
+#### Operation Types
+
+```typescript
+type OperationType = 'insert' | 'replace' | 'delete';
+
+interface FileOperation {
+  type: OperationType;
+  target: string;                    // String to locate in file
+  content?: string;                  // New content (for insert/replace)
+  position?: 'before' | 'after';     // For insert only
+}
+```
+
+#### Edit Operations
+
+All operations require a unique target string (appears exactly once in file):
+
+```typescript
+// Insert content before or after target
+await cfs.insert('/path/file.txt', 'targetString', 'newContent', 'after', 'agent1');
+await cfs.insert('/path/file.txt', 'targetString', 'newContent', 'before', 'agent1');
+
+// Replace target with new content
+await cfs.replace('/path/file.txt', 'oldString', 'newString', 'agent1');
+
+// Delete target string
+await cfs.delete('/path/file.txt', 'stringToDelete', 'agent1');
+```
+
+**Errors**:
+- `TargetNotFoundError` - Target string not found in file
+- `AmbiguousTargetError` - Target string appears multiple times
+
+#### Read Operations
+
+Each agent sees its own uncommitted operations applied:
+
+```typescript
+// Read file with agent's operations applied
+const content = await cfs.readFile('/path/file.txt', 'agent1');
+
+// Get agent's pending operations
+const ops = cfs.getOperations('agent1', '/path/file.txt');
+```
+
+#### Conflict Detection (Git-style)
+
+Conflicts occur when two agents' operations affect overlapping regions:
+
+```typescript
+// Check conflicts for a file
+const conflicts = cfs.getConflicts('/path/file.txt');
+const hasConflict = cfs.hasConflicts('/path/file.txt');
+
+// Get all conflicts across all files
+const allConflicts = cfs.getAllConflicts();  // Map<filePath, Conflict[]>
+
+interface Conflict {
+  filePath: string;
+  agents: string[];
+  operations: { agentId: string; operation: FileOperation }[];
+  region: { start: number; end: number };
+}
+```
+
+#### Merged View
+
+View combined changes from all agents with annotations:
+
+```typescript
+// Get merged content with all operations applied
+const { content, annotations } = await cfs.getMergedContent('/path/file.txt');
+
+// Get content with only one agent's changes
+const { content, operations } = await cfs.getAgentChanges('/path/file.txt', 'agent1');
+
+interface Annotation {
+  agentId: string;
+  start: number;
+  end: number;
+  type: OperationType;
+}
+```
+
+#### Flush Operations
+
+Write operations to disk (rejects if conflicts exist):
+
+```typescript
+// Flush single agent's operations
+await cfs.flush('agent1');  // Throws ConflictError if conflicts exist
+
+// Flush all agents' operations
+await cfs.flushAll();  // Throws ConflictError if any conflicts exist
+```
+
+#### Utility Methods
+
+```typescript
+// Discard operations
+cfs.discardOperations('agent1');                    // All operations for agent
+cfs.discardOperations('agent1', '/path/file.txt');  // Specific file only
+
+// Cache management
+cfs.clearReadCache();                    // Clear all cached content
+cfs.invalidateCache('/path/file.txt');   // Invalidate specific file
 ```
 
 ## Logging Utilities
